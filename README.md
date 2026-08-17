@@ -62,5 +62,5 @@ O endereço padrão do Vite é `http://localhost:5173`.
 
 ## Organização da API
 
-A API utiliza arquitetura em camadas. Os endpoints chamam osS services, que acessam o contrato `AcademicDataProvider`. A implementação atual, `PostgresAcademicDataProvider`, usa repositories e SQLAlchemy para consultar o PostgreSQL. Essa separação permite adicionar outra fonte acadêmica no futuro sem alterar os endpoints.
+A API utiliza arquitetura em camadas. Os endpoints chamam os services, que acessam o contrato `AcademicDataProvider`. A implementação atual, `PostgresAcademicDataProvider`, usa repositories e SQLAlchemy para consultar o PostgreSQL. Essa separação permite adicionar outra fonte acadêmica no futuro sem alterar os endpoints.
 
