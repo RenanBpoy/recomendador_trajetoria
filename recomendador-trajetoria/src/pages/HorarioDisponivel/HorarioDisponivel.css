@@ -1,0 +1,29 @@
+.availability-page .app-header { min-height: 64px; }
+.availability-page__content { padding: 3px 28px var(--nav-space); }
+.selected-time { min-height: 72px; padding: 14px 18px; border-radius: 17px; background: var(--surface-strong); position: relative; display: flex; flex-direction: column; gap: 10px; }
+.selected-time > span { color: var(--muted); font-size: 11px; }
+.selected-time strong { font-size: 14px; }
+.selected-time b { position: absolute; top: 10px; right: 10px; min-height: 27px; padding: 0 12px; border: 1px solid var(--cyan); border-radius: 15px; color: var(--cyan); font-size: 9px; display: flex; align-items: center; }
+.suggestions { margin-top: 16px; }
+.suggestions h1 { margin: 0 0 13px; font-size: 15px; }
+.suggestions > div { display: flex; flex-direction: column; gap: 9px; }
+.suggestion-card { min-height: 118px; padding: 16px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); display: grid; grid-template-columns: 31px 1fr auto; align-items: start; gap: 10px; }
+.suggestion-card__check { width: 29px; height: 29px; border-radius: 50%; color: #002135; background: var(--cyan); display: flex; align-items: center; justify-content: center; }
+.suggestion-card__copy { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
+.suggestion-card__copy strong { font-size: 14px; }
+.suggestion-card__copy small { color: var(--muted); font-size: 9px; font-weight: 700; }
+.suggestion-card__copy .small-pill { min-height: 24px; margin-top: 2px; }
+.suggestion-card__score { min-width: 61px; padding: 6px 9px; border-radius: 14px; color: var(--cyan); background: #0a3a58; font-size: 10px; font-weight: 800; text-align: center; }
+.suggestion-card__score b { margin-left: 4px; color: var(--muted); font-size: 15px; }
+.other-options { margin-top: 11px; }
+.other-options h2 { margin: 0 0 8px; font-size: 13px; }
+.other-options button { width: 100%; min-height: 42px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 13px; color: var(--text); background: var(--surface); display: flex; align-items: center; gap: 9px; text-align: left; cursor: pointer; }
+.other-options button + button { margin-top: 7px; }
+.other-options button > span:first-child { width: 29px; height: 29px; border-radius: 9px; color: var(--bg); display: flex; align-items: center; justify-content: center; }
+.other-options button > span.green { background: var(--green); }
+.other-options button > span.pink { background: var(--pink); }
+.other-options button > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.other-options button strong { font-size: 11px; }
+.other-options button small { color: var(--muted); font-size: 9px; }
+.other-options button > b { color: var(--muted); font-size: 18px; font-weight: 400; }
+.availability-page__submit { height: 48px; min-height: 48px; margin-top: 12px; }

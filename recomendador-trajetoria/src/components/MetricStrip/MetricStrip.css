@@ -1,0 +1,53 @@
+.metric-strip h2 {
+  margin: 0 0 11px;
+  font-size: 15px;
+}
+
+.metric-strip__grid {
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: var(--surface);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.metric-strip__item {
+  min-width: 0;
+  min-height: 60px;
+  padding: 9px 6px;
+  border-radius: 12px;
+  background: #0b2740;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.metric-strip__item strong {
+  color: var(--cyan);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.metric-strip__item span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metric-strip__item--green strong { color: var(--green); }
+.metric-strip__item--yellow strong { color: var(--yellow); }
+.metric-strip__item--pink strong { color: var(--pink); }
+
+@media (max-width: 350px) {
+  .metric-strip__grid { padding-inline: 9px; gap: 6px; }
+  .metric-strip__item { padding-inline: 3px; }
+  .metric-strip__item strong { font-size: 13px; }
+}

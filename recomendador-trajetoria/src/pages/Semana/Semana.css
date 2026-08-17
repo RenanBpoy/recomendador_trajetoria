@@ -1,0 +1,17 @@
+.week-page__content { padding: 8px 30px var(--nav-space); display: flex; flex-direction: column; gap: 18px; }
+.schedule-filters { display: flex; align-items: center; gap: 8px; }
+.schedule-filters button { min-height: 31px; padding: 0 14px; border: 1px solid var(--border); border-radius: 18px; color: var(--text); background: var(--surface); font-size: 10px; font-weight: 800; cursor: pointer; }
+.schedule-filters button.is-active { color: #001425; border-color: var(--cyan); background: var(--cyan); }
+.planned-load { min-height: 87px; padding: 18px; border-radius: 17px; background: var(--surface-strong); display: flex; flex-direction: column; gap: 16px; }
+.planned-load span { color: var(--muted); font-size: 11px; }
+.planned-load strong { font-size: 14px; }
+.next-action { min-height: 79px; padding: 15px 18px; border: 1px solid var(--border); border-radius: 17px; background: var(--surface); display: flex; align-items: center; justify-content: space-between; }
+.next-action span { display: flex; flex-direction: column; gap: 10px; }
+.next-action small { color: var(--muted); font-size: 10px; }
+.next-action strong { font-size: 12px; }
+.next-action b { color: var(--cyan); font-size: 22px; font-weight: 400; }
+
+@media (max-width: 350px) {
+  .week-page__content { padding-inline: 18px; }
+  .schedule-filters button { padding-inline: 10px; }
+}

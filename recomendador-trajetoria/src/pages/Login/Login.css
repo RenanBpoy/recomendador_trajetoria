@@ -1,0 +1,13 @@
+.login-page { padding: 30px 22px 34px; }
+.login-page__brand { color: var(--cyan); font-size: 13px; font-weight: 800; }
+.login-page__mark { width: 92px; height: 92px; margin: 160px auto 50px; border: 1px solid var(--border); border-radius: 50%; color: var(--cyan); background: var(--surface); display: flex; align-items: center; justify-content: center; }
+.login-form { display: flex; flex-direction: column; gap: 14px; }
+.login-form__forgot { margin-top: -4px; color: var(--cyan); font-size: 12px; font-weight: 700; text-align: right; }
+.login-form__submit { margin-top: 14px; }
+.login-page__signup { margin: auto auto 135px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+.login-page__signup a { color: var(--cyan); font-weight: 800; }
+
+@media (max-height: 760px) {
+  .login-page__mark { margin-top: 90px; margin-bottom: 36px; }
+  .login-page__signup { margin-bottom: 45px; }
+}

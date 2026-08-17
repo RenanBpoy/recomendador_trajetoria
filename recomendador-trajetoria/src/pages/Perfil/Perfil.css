@@ -1,0 +1,23 @@
+.profile-page__content { padding: 24px 24px var(--nav-space); }
+.profile-identity { padding: 0 8px; display: flex; align-items: center; gap: 16px; }
+.profile-avatar { width: 82px; height: 82px; border: 1.5px solid var(--cyan); border-radius: 50%; background: var(--surface); flex: 0 0 auto; }
+.profile-identity h2 { margin: 0 0 8px; font-size: 16px; }
+.profile-identity p, .profile-identity span { margin: 0; color: var(--muted); font-size: 10px; }
+.profile-identity span { display: block; margin-top: 6px; }
+.course-progress { margin-top: 22px; min-height: 75px; padding: 17px 18px; border-radius: 18px; color: #001425; background: var(--cyan-strong); display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.course-progress > div:first-child { display: flex; flex-direction: column; gap: 5px; }
+.course-progress span { font-size: 10px; font-weight: 700; }
+.course-progress strong { font-size: 20px; }
+.progress-track { width: 99px; height: 12px; border-radius: 8px; background: #0b6680; overflow: hidden; }
+.progress-track span { display: block; width: 68%; height: 100%; border-radius: inherit; background: var(--bg); }
+.profile-page .metric-strip { margin-top: 20px; }
+.account-settings { margin-top: 20px; }
+.account-settings h2 { margin: 0 0 11px; font-size: 15px; }
+.account-settings > div { display: flex; flex-direction: column; gap: 9px; }
+.account-settings button { width: 100%; min-height: 58px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 15px; color: var(--text); background: var(--surface); text-align: left; display: flex; align-items: center; gap: 11px; cursor: pointer; }
+.account-settings__icon { width: 33px; height: 33px; border-radius: 50%; color: var(--cyan); background: #0b3552; display: inline-flex; align-items: center; justify-content: center; }
+.account-settings__copy { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.account-settings__copy strong { font-size: 11px; }
+.account-settings__copy small { color: var(--muted); font-size: 9px; }
+.account-settings button b { color: var(--muted); font-size: 19px; font-weight: 400; }
+.profile-page__logout { margin-top: 24px; }

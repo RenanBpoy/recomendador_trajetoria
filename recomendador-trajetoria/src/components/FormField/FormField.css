@@ -1,0 +1,8 @@
+.form-field { display: block; }
+.form-field__label { display: block; margin: 0 0 6px; color: #c8d3df; font-size: 11px; font-weight: 700; }
+.form-field__control { min-height: 49px; padding: 0 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); display: flex; align-items: center; }
+.form-field__control:focus-within { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.12); }
+.form-field__control input { width: 100%; min-width: 0; color: var(--text); background: transparent; border: 0; outline: 0; font-size: 13px; }
+.form-field__control input::placeholder { color: var(--muted); opacity: 0.9; }
+.form-field__icon { width: 28px; height: 28px; padding: 0; color: var(--muted); background: transparent; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.form-field__static-icon { color: var(--muted); flex: 0 0 auto; }

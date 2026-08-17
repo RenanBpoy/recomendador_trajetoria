@@ -1,0 +1,23 @@
+.schedule-grid { padding: 18px 11px 13px; border: 1px solid var(--border); border-radius: 19px; background: var(--surface); }
+.schedule-grid__days { margin-left: 32px; display: grid; grid-template-columns: repeat(5, 1fr); color: #c2d1df; font-size: 9px; font-weight: 800; text-align: center; }
+.schedule-grid__body { height: 327px; margin-top: 12px; display: grid; grid-template-columns: 31px 1fr; }
+.schedule-grid__times { color: var(--muted); font-size: 9px; display: grid; grid-template-rows: repeat(7, 1fr); }
+.schedule-grid__times span { transform: translateY(-5px); }
+.schedule-grid__canvas { position: relative; border-left: 1px solid var(--border); background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 100% calc(100% / 7), 20% 100%; }
+.schedule-entry { position: absolute; width: 44px; min-height: 43px; padding: 5px; border-radius: 9px; color: #001425; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; text-align: center; }
+.schedule-entry--blue { background: var(--blue); }
+.schedule-entry--green { min-height: 87px; background: var(--green); }
+.schedule-entry--yellow { background: var(--yellow); }
+.schedule-entry--pink { background: var(--pink); color: #fff; }
+.schedule-entry--c1 { left: 4%; }
+.schedule-entry--c2 { left: 23%; }
+.schedule-entry--c3 { left: 42%; }
+.schedule-entry--c4 { left: 62%; }
+.schedule-entry--c5 { left: 81%; }
+.schedule-entry--r1 { top: 0; }
+.schedule-entry--r2 { top: 14%; }
+.schedule-entry--r4 { top: 43%; }
+.schedule-entry--r5 { top: 58%; }
+.schedule-free { position: absolute; top: 58%; left: 42%; width: 44px; height: 49px; border: 2px dashed var(--cyan); border-radius: 10px; color: var(--cyan); font-size: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.schedule-free strong { font-size: 18px; line-height: 1; }
+.schedule-grid > p { margin: 12px 0 0; color: var(--muted); font-size: 9px; text-align: center; }

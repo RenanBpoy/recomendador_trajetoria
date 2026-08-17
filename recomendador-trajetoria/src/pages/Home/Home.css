@@ -1,0 +1,21 @@
+.home-page__content { padding: 14px 24px var(--nav-space); display: flex; flex-direction: column; gap: 19px; }
+.semester-summary { padding: 18px; border-radius: 20px; color: #001425; background: var(--cyan-strong); }
+.semester-summary > span { font-size: 9px; font-weight: 800; }
+.semester-summary > div { margin-top: 7px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.semester-summary strong { font-size: 21px; line-height: 1.15; letter-spacing: -0.5px; }
+.semester-summary a { padding: 9px 15px; border-radius: 16px; color: var(--text); background: var(--bg); font-size: 10px; font-weight: 800; white-space: nowrap; }
+.semester-summary p { margin: 15px 0 0; font-size: 11px; font-weight: 700; }
+.today-section header { margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+.today-section h2, .quick-actions h2 { margin: 0; font-size: 16px; }
+.today-section header a { color: var(--cyan); font-size: 11px; font-weight: 700; }
+.today-section__events { display: flex; flex-direction: column; gap: 10px; }
+.quick-actions h2 { margin-bottom: 12px; }
+.quick-actions > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.quick-actions a { min-height: 92px; padding: 13px 7px; border: 1px solid var(--border); border-radius: 17px; color: var(--cyan); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.quick-actions a span { color: var(--text); font-size: 10px; font-weight: 700; }
+.quick-actions svg { width: 20px; height: 20px; }
+.next-recommendation { min-height: 73px; padding: 16px 18px; border: 1px solid var(--border); border-radius: 17px; background: var(--surface-strong); display: flex; align-items: center; justify-content: space-between; }
+.next-recommendation span { display: flex; flex-direction: column; gap: 8px; }
+.next-recommendation strong { font-size: 11px; }
+.next-recommendation small { color: var(--muted); font-size: 10px; }
+.next-recommendation b { color: var(--cyan); font-size: 24px; font-weight: 400; }

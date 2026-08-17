@@ -1,0 +1,11 @@
+.grade-page__content { padding: 20px 24px var(--nav-space); display: flex; flex-direction: column; gap: 12px; }
+.grade-page__button { margin-top: 13px; height: 47px; min-height: 47px; }
+
+.academic-context { min-height: 62px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 15px; background: var(--surface); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.academic-context div { display: flex; flex-direction: column; gap: 3px; }
+.academic-context span, .ppc-selector > span { color: var(--muted); font-size: 10px; font-weight: 700; }
+.academic-context strong { color: var(--cyan); font-size: 15px; }
+.academic-context small { color: var(--muted); font-size: 10px; text-align: right; }
+
+.ppc-selector { display: flex; flex-direction: column; gap: 6px; }
+.ppc-tabs button:disabled { cursor: default; opacity: 0.72; }

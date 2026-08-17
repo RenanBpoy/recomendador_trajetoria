@@ -1,0 +1,12 @@
+.app-header {
+  min-height: 80px;
+  padding: max(22px, env(safe-area-inset-top)) 24px 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.app-header__copy { min-width: 0; }
+.app-header__brand { display: block; color: var(--cyan); font-size: 13px; line-height: 1; font-weight: 800; margin-bottom: 14px; }
+.app-header__title { margin: 0; font-size: 27px; line-height: 1.08; letter-spacing: -0.7px; }
