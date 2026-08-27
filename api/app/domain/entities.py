@@ -57,6 +57,16 @@ class Docente:
 
 
 @dataclass(frozen=True, slots=True)
+class HorarioOfertaTurma:
+    id: int
+    dia_semana: int
+    dia_nome: str
+    hora_inicio: time
+    hora_fim: time
+    sala: str
+
+
+@dataclass(frozen=True, slots=True)
 class OfertaTurma:
     id: UUID
     curso_codigo: str
@@ -70,6 +80,9 @@ class OfertaTurma:
     creditos: int
     situacao: str
     docentes: tuple[Docente, ...]
+    fonte_dados: str = "DIARIO_CLASSE"
+    fonte_referencia: str | None = None
+    horarios: tuple[HorarioOfertaTurma, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

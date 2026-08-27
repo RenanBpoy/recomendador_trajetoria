@@ -1,3 +1,4 @@
+from datetime import time
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -46,6 +47,15 @@ class DocenteResponse(DomainSchema):
     nome: str
 
 
+class HorarioOfertaTurmaResponse(DomainSchema):
+    id: int
+    dia_semana: int
+    dia_nome: str
+    hora_inicio: time
+    hora_fim: time
+    sala: str
+
+
 class OfertaTurmaResponse(DomainSchema):
     id: UUID
     curso_codigo: str
@@ -59,6 +69,9 @@ class OfertaTurmaResponse(DomainSchema):
     creditos: int
     situacao: str
     docentes: tuple[DocenteResponse, ...]
+    fonte_dados: str
+    fonte_referencia: str | None
+    horarios: tuple[HorarioOfertaTurmaResponse, ...]
 
 
 class PeriodoAcademicoResponse(DomainSchema):

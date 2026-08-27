@@ -102,9 +102,32 @@ class OfertaTurmaModel(Base):
     carga_horaria: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     creditos: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     situacao: Mapped[str] = mapped_column(Text, nullable=False)
+    fonte_dados: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default="DIARIO_CLASSE"
+    )
+    fonte_referencia: Mapped[str | None] = mapped_column(Text, nullable=True)
     course: Mapped[CursoModel] = relationship(back_populates="offerings")
     discipline: Mapped[DisciplinaModel] = relationship(back_populates="offerings")
     teachers: Mapped[list[DocenteModel]] = relationship(secondary=offering_teacher, back_populates="offerings")
+    schedules: Mapped[list[HorarioOfertaTurmaModel]] = relationship(
+        back_populates="offering",
+        cascade="all, delete-orphan",
+    )
+
+
+class HorarioOfertaTurmaModel(Base):
+    __tablename__ = "oferta_turma_horario"
+    id: Mapped[int] = mapped_column(
+        BigInteger, Identity(always=True), primary_key=True
+    )
+    oferta_turma_id: Mapped[UUID] = mapped_column(
+        ForeignKey("oferta_turma.id", ondelete="CASCADE"), nullable=False
+    )
+    dia_semana: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    hora_inicio: Mapped[time] = mapped_column(Time, nullable=False)
+    hora_fim: Mapped[time] = mapped_column(Time, nullable=False)
+    sala: Mapped[str] = mapped_column(Text, nullable=False)
+    offering: Mapped[OfertaTurmaModel] = relationship(back_populates="schedules")
 
 
 class AlunoModel(Base):

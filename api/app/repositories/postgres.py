@@ -10,6 +10,7 @@ from app.domain.entities import (
     Curso,
     Disciplina,
     Docente,
+    HorarioOfertaTurma,
     ItemHistoricoEscolar,
     OfertaTurma,
     Page,
@@ -22,6 +23,7 @@ from app.models.academic import (
     CursoModel,
     DisciplinaModel,
     DocenteModel,
+    HorarioOfertaTurmaModel,
     MatriculaTurmaModel,
     OfertaTurmaModel,
     offering_teacher,
@@ -51,6 +53,15 @@ def _curriculum(model: CurriculoModel) -> Curriculo:
 
 
 def _offering(model: OfertaTurmaModel) -> OfertaTurma:
+    day_names = {
+        1: "Segunda-feira",
+        2: "Terça-feira",
+        3: "Quarta-feira",
+        4: "Quinta-feira",
+        5: "Sexta-feira",
+        6: "Sábado",
+        7: "Domingo",
+    }
     return OfertaTurma(
         id=model.id,
         curso_codigo=model.curso_codigo,
@@ -66,6 +77,27 @@ def _offering(model: OfertaTurmaModel) -> OfertaTurma:
         docentes=tuple(
             Docente(id=teacher.id, nome=teacher.nome)
             for teacher in sorted(model.teachers, key=lambda item: item.nome)
+        ),
+        fonte_dados=model.fonte_dados,
+        fonte_referencia=model.fonte_referencia,
+        horarios=tuple(
+            HorarioOfertaTurma(
+                id=schedule.id,
+                dia_semana=schedule.dia_semana,
+                dia_nome=day_names[schedule.dia_semana],
+                hora_inicio=schedule.hora_inicio,
+                hora_fim=schedule.hora_fim,
+                sala=schedule.sala,
+            )
+            for schedule in sorted(
+                model.schedules,
+                key=lambda item: (
+                    item.dia_semana,
+                    item.hora_inicio,
+                    item.hora_fim,
+                    item.sala,
+                ),
+            )
         ),
     )
 
@@ -153,6 +185,7 @@ class SqlAlchemyOfertaTurmaRepository:
             joinedload(OfertaTurmaModel.course),
             joinedload(OfertaTurmaModel.discipline),
             selectinload(OfertaTurmaModel.teachers),
+            selectinload(OfertaTurmaModel.schedules),
         )
 
     async def list(

@@ -30,7 +30,8 @@ recomendador_trajetoria/
 - divisão dos blocos de DCG em vagas de 60 horas e escolha manual de equivalências não detectadas;
 - plano semanal interativo para incluir disciplinas, estágio e outras atividades, com edição e persistência por usuário;
 - questionário acadêmico versionado com 17 afirmações, salvamento automático e retomada do progresso;
-- consulta de cursos, disciplinas, PPCs e ofertas de turma pela API.
+- consulta de cursos, disciplinas, PPCs e ofertas de turma pela API;
+- horários oficiais de SI e CC para `2026/2`, com vários encontros por turma e salas;
 - cache de dados por sessão no frontend, com invalidação após alterações acadêmicas.
 
 ## Executando a API
@@ -74,3 +75,5 @@ A API utiliza arquitetura em camadas. Os endpoints chamam os services, que acess
 O PPC escolhido pelo estudante fica salvo no perfil e é usado pela Home e pela Grade. O PDF original, CPF e documento de identidade não são armazenados; a importação guarda somente os dados acadêmicos necessários e o hash do arquivo.
 
 O questionário é carregado pela API em `GET /api/v1/questionarios/atual`. Respostas de 1 a 10 são salvas individualmente e vinculadas ao usuário e à versão respondida. Ainda não há pesos nem algoritmo de recomendação.
+
+As ofertas podem ser filtradas por curso, disciplina, ano e semestre em `GET /api/v1/ofertas-turma`. Cada oferta devolve seus encontros em `horarios`; também é possível consultar somente os horários de uma oferta em `GET /api/v1/ofertas-turma/{oferta_id}/horarios`.

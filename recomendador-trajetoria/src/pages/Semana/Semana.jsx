@@ -2,6 +2,7 @@ import { RotateCw, Save } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import AppHeader from '../../components/AppHeader/AppHeader'
 import BottomNav from '../../components/BottomNav/BottomNav'
+import CargaPlanejada from '../../components/CargaPlanejada/CargaPlanejada'
 import PlanItemDialog from '../../components/PlanItemDialog/PlanItemDialog'
 import ScheduleGrid from '../../components/ScheduleGrid/ScheduleGrid'
 import { getWeeklyPlan, saveWeeklyPlan } from '../../services/plan'
@@ -150,11 +151,6 @@ function Semana() {
   const disciplineHours = durationByType(items, 'DISCIPLINA')
   const internshipHours = durationByType(items, 'ESTAGIO')
   const otherHours = durationByType(items, 'OUTRO')
-  const loadParts = [
-    disciplineHours && `${disciplineHours} h de disciplinas`,
-    internshipHours && `${internshipHours} h de estágio`,
-    otherHours && `${otherHours} h em outras atividades`,
-  ].filter(Boolean)
 
   return (
     <main className="mobile-page week-page">
@@ -170,10 +166,11 @@ function Semana() {
           <ScheduleGrid entries={items} onSelectSlot={openNewItem} onSelectEntry={setEditorItem} />
         )}
 
-        <section className="planned-load">
-          <span>Carga planejada</span>
-          <strong>{loadParts.length ? loadParts.join(' + ') : 'Nenhuma atividade adicionada'}</strong>
-        </section>
+        <CargaPlanejada
+          horasDisciplinas={disciplineHours}
+          horasEstagio={internshipHours}
+          horasOutras={otherHours}
+        />
 
         {feedback && <p className="week-page__feedback is-success" role="status">{feedback}</p>}
         {error && <p className="week-page__feedback is-error" role="alert">{error}</p>}

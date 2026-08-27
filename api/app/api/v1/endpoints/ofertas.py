@@ -4,7 +4,11 @@ from uuid import UUID
 from fastapi import APIRouter, Query, Request
 
 from app.dependencies.providers import OfertaTurmaServiceDep
-from app.schemas.academic import OfertaTurmaResponse, PeriodoAcademicoResponse
+from app.schemas.academic import (
+    HorarioOfertaTurmaResponse,
+    OfertaTurmaResponse,
+    PeriodoAcademicoResponse,
+)
 from app.schemas.common import (
     ApiPageResponse,
     ApiResponse,
@@ -19,7 +23,7 @@ router = APIRouter(tags=["Ofertas de turma"])
 @router.get(
     "/ofertas-turma",
     response_model=ApiPageResponse[OfertaTurmaResponse],
-    summary="Listar ofertas de turma registradas nos diários",
+    summary="Listar ofertas de turma e seus horários",
 )
 async def list_class_offerings(
     request: Request,
@@ -59,6 +63,27 @@ async def get_class_offering(
     offering = await service.get(oferta_id)
     return ApiResponse(
         data=OfertaTurmaResponse.model_validate(offering),
+        meta=response_meta(request),
+    )
+
+
+@router.get(
+    "/ofertas-turma/{oferta_id}/horarios",
+    response_model=ApiResponse[list[HorarioOfertaTurmaResponse]],
+    responses={404: {"model": ErrorResponse}},
+    summary="Listar os horários de uma oferta de turma",
+)
+async def list_class_offering_schedules(
+    oferta_id: UUID,
+    request: Request,
+    service: OfertaTurmaServiceDep,
+) -> ApiResponse[list[HorarioOfertaTurmaResponse]]:
+    offering = await service.get(oferta_id)
+    return ApiResponse(
+        data=[
+            HorarioOfertaTurmaResponse.model_validate(schedule)
+            for schedule in offering.horarios
+        ],
         meta=response_meta(request),
     )
 
