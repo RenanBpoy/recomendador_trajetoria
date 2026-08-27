@@ -16,15 +16,22 @@ recomendador_trajetoria/
 - SQLAlchemy para acesso aos dados;
 - PostgreSQL hospedado no Supabase;
 - Supabase Auth para cadastro e login.
+- Supabase Storage privado para fotos de perfil.
 
 ## Funcionalidades
 
 - cadastro e login de estudantes;
+- perfil funcional com edição de nome, nascimento, e-mail, senha, PPC e foto;
 - identificação do curso associado ao usuário;
 - seleção da versão do PPC;
 - exibição da sequência curricular recomendada;
-- comparação da grade com o histórico escolar;
+- comparação da grade com os diários de classe e com o histórico escolar enviado em PDF;
+- reconhecimento de disciplinas equivalentes por código ou nome semelhante;
+- divisão dos blocos de DCG em vagas de 60 horas e escolha manual de equivalências não detectadas;
+- plano semanal interativo para incluir disciplinas, estágio e outras atividades, com edição e persistência por usuário;
+- questionário acadêmico versionado com 17 afirmações, salvamento automático e retomada do progresso;
 - consulta de cursos, disciplinas, PPCs e ofertas de turma pela API.
+- cache de dados por sessão no frontend, com invalidação após alterações acadêmicas.
 
 ## Executando a API
 
@@ -62,5 +69,8 @@ O endereço padrão do Vite é `http://localhost:5173`.
 
 ## Organização da API
 
-A API utiliza arquitetura em camadas. Os endpoints chamam os services, que acessam o contrato `AcademicDataProvider`. A implementação atual, `PostgresAcademicDataProvider`, usa repositories e SQLAlchemy para consultar o PostgreSQL. Essa separação permite adicionar outra fonte acadêmica no futuro sem alterar os endpoints.
+A API utiliza arquitetura em camadas. Os endpoints chamam os services, que acessam o contrato `AcademicDataProvider`. A implementação atual combina o `PostgresAcademicDataProvider`, responsável pelo banco acadêmico, com a fonte de históricos importados. O `PdfUfsmHistoricoProvider` adapta o documento da UFSM para o formato interno da aplicação. Essa separação permite adicionar outra fonte acadêmica no futuro sem alterar os endpoints.
 
+O PPC escolhido pelo estudante fica salvo no perfil e é usado pela Home e pela Grade. O PDF original, CPF e documento de identidade não são armazenados; a importação guarda somente os dados acadêmicos necessários e o hash do arquivo.
+
+O questionário é carregado pela API em `GET /api/v1/questionarios/atual`. Respostas de 1 a 10 são salvas individualmente e vinculadas ao usuário e à versão respondida. Ainda não há pesos nem algoritmo de recomendação.

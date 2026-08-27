@@ -1,0 +1,10 @@
+.plan-item-form { display: flex; flex-direction: column; gap: 13px; }
+.plan-item-form label { display: flex; flex-direction: column; gap: 6px; }
+.plan-item-form label > span { color: #c8d3df; font-size: 10px; font-weight: 750; }
+.plan-item-form input, .plan-item-form select, .plan-item-form textarea { width: 100%; min-height: 45px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; outline: none; color: var(--text); background: var(--surface); font: inherit; font-size: 11px; }
+.plan-item-form textarea { min-height: 72px; padding-block: 11px; resize: vertical; }
+.plan-item-form input:focus, .plan-item-form select:focus, .plan-item-form textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(34, 211, 238, .1); }
+.plan-item-form__times { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.plan-item-form__error { margin: 0; color: #fb7185; font-size: 10px; line-height: 1.45; }
+.plan-item-form__actions { margin-top: 3px; display: flex; gap: 9px; }
+.plan-item-form__actions > button { min-height: 42px; flex: 1; }

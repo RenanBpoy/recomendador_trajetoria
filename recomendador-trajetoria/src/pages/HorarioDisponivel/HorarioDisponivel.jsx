@@ -48,7 +48,7 @@ function HorarioDisponivel() {
 
         <button className="primary-button availability-page__submit" type="button" onClick={() => navigate('/calendario')}>Adicionar à agenda</button>
       </div>
-      <BottomNav active="agenda" />
+      <BottomNav active="plano" />
     </main>
   )
 }

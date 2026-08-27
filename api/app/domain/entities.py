@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, time
 from typing import Generic, TypeVar
 from uuid import UUID
 
@@ -90,6 +90,120 @@ class ItemHistoricoEscolar:
     media_final: float | None
     faltas_total: int
     situacao_final: str
+    fonte: str = "DIARIO_CLASSE"
+    disciplina_codigo_origem: str | None = None
+    disciplina_origem: str | None = None
+    metodo_correspondencia: str | None = None
+    confianca_correspondencia: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ItemHistoricoDocumento:
+    codigo: str
+    nome: str
+    carga_horaria: int
+    creditos: int
+    situacao: str
+    ano: int
+    semestre: int
+    media: float | None = None
+    dispensa: str | None = None
+    categoria: str | None = None
+    professores: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class HistoricoDocumento:
+    curso_codigo: str
+    ppc_ano: int
+    nome_aluno: str
+    matricula: str
+    data_emissao: date | None
+    itens: tuple[ItemHistoricoDocumento, ...]
+    media_geral: float | None = None
+    carga_horaria_realizada: int | None = None
+    carga_horaria_total: int | None = None
+    percentual_concluido: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class CorrespondenciaProposta:
+    item_indice: int
+    ppc_id: int
+    ppc_componente_id: int
+    metodo: str
+    confianca: float
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
+class ItemImportacaoHistorico:
+    id: int
+    codigo_original: str
+    nome_original: str
+    carga_horaria: int
+    ano: int
+    semestre: int
+    situacao: str
+    media: float | None
+    correspondencia_id: int | None = None
+    disciplina_codigo: str | None = None
+    disciplina_nome: str | None = None
+    metodo_correspondencia: str | None = None
+    confianca_correspondencia: float | None = None
+    status_correspondencia: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ImportacaoHistorico:
+    id: UUID
+    nome_arquivo: str
+    criado_em: datetime
+    curso_codigo_documento: str
+    ppc_ano_documento: int
+    ppc_referencia_id: int
+    total_itens: int
+    identificados: int
+    requerem_confirmacao: int
+    nao_identificados: int
+    itens: tuple[ItemImportacaoHistorico, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class CandidatoEquivalencia:
+    id: int
+    codigo_original: str
+    nome_original: str
+    carga_horaria: int
+    ano: int
+    semestre: int
+    situacao: str
+    media: float | None
+    selecionavel: bool = False
+    motivo_indisponibilidade: str | None = None
+    similaridade_nome: float | None = None
+    em_uso: bool = False
+    componente_em_uso_id: int | None = None
+    slot_em_uso: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class EquivalenciaManual:
+    id: int
+    ppc_id: int
+    ppc_componente_id: int
+    slot_ordem: int
+    historico_item_id: int
+    codigo_original: str
+    nome_original: str
+    carga_horaria: int
+    ano: int
+    semestre: int
+    situacao: str
+    media: float | None
+    tipo_componente: str
+    nome_componente: str
+    disciplina_codigo: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,6 +236,75 @@ class UserProfile:
     matricula: str
     curso_codigo: str
     nome: str
+    ppc_id: int | None = None
+    data_nascimento: date | None = None
+    avatar_path: str | None = None
+    avatar_url: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class PlanoSemanaItemInput:
+    tipo_atividade: str
+    titulo: str
+    dia_semana: int
+    hora_inicio: time
+    hora_fim: time
+    observacoes: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class PlanoSemanaItem:
+    id: int
+    tipo_atividade: str
+    titulo: str
+    dia_semana: int
+    hora_inicio: time
+    hora_fim: time
+    observacoes: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class QuestionarioPergunta:
+    id: int
+    codigo: str
+    ordem_global: int
+    ordem_secao: int
+    texto: str
+    resposta: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class QuestionarioSecao:
+    id: int
+    codigo: str
+    ordem: int
+    titulo: str
+    descricao: str
+    orientacao: str | None
+    perguntas: tuple[QuestionarioPergunta, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class QuestionarioPreenchimento:
+    id: UUID | None
+    status: str
+    total_perguntas: int
+    total_respondidas: int
+    atualizado_em: datetime | None = None
+    concluido_em: datetime | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class QuestionarioAtual:
+    id: int
+    codigo: str
+    versao: int
+    titulo: str
+    descricao: str
+    escala_minima: int
+    escala_maxima: int
+    secoes: tuple[QuestionarioSecao, ...]
+    preenchimento: QuestionarioPreenchimento
 
 
 @dataclass(frozen=True, slots=True)

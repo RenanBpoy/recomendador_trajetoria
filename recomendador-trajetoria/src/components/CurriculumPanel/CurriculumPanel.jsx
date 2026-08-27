@@ -17,13 +17,13 @@ const summaryItems = [
   { key: 'interrupted', label: 'Não concluídas', tone: 'yellow', icon: Pause },
 ]
 
-function CurriculumPanel({ components, history, loading }) {
+function CurriculumPanel({ components, history, manualMappings, loading, onSelectEquivalence }) {
   const [activeSemester, setActiveSemester] = useState(1)
   const [search, setSearch] = useState('')
 
   const progress = useMemo(
-    () => buildCurriculumProgress(components, history),
-    [components, history],
+    () => buildCurriculumProgress(components, history, manualMappings),
+    [components, history, manualMappings],
   )
   const semesters = useMemo(
     () => [...new Set(progress.map((item) => item.semestre_recomendado))].sort((a, b) => a - b),
@@ -99,20 +99,40 @@ function CurriculumPanel({ components, history, loading }) {
             const visual = statusVisuals[component.estado_academico.key]
             const Icon = visual.icon
             const latest = component.tentativa_mais_recente
-            const componentName = component.disciplina_nome || component.nome_no_ppc
+            const imported = latest?.fonte === 'HISTORICO_IMPORTADO'
+            const manual = latest?.fonte === 'EQUIVALENCIA_MANUAL'
+            const componentName = component.eh_dcg && component.equivalencia_manual
+              ? component.equivalencia_manual.nome_original
+              : component.nome_exibicao || component.disciplina_nome || component.nome_no_ppc
             const details = [
-              component.disciplina_codigo,
+              manual ? latest.disciplina_codigo_origem : component.disciplina_codigo,
               `${component.carga_horaria} h`,
               latest ? `última tentativa ${latest.ano}/${latest.semestre}` : null,
+              imported && latest.disciplina_codigo_origem !== component.disciplina_codigo
+                ? `código original ${latest.disciplina_codigo_origem}`
+                : null,
             ].filter(Boolean).join(' • ')
+            const clickable = component.estado_academico.key === 'pending' || manual
 
             return (
-              <article key={component.id} className="course-row">
+              <button
+                key={component.chave_grade}
+                type="button"
+                className={`course-row${clickable ? ' course-row--clickable' : ''}`}
+                disabled={!clickable}
+                onClick={() => onSelectEquivalence(component)}
+                aria-label={clickable ? `Escolher equivalência para ${componentName}` : undefined}
+              >
                 <span className={`course-row__icon course-row__icon--${visual.tone}`}><Icon size={18} strokeWidth={3} /></span>
-                <span className="course-row__copy"><strong>{componentName}</strong><small>{details}</small></span>
+                <span className="course-row__copy">
+                  <strong>{componentName}</strong>
+                  <small>{details}</small>
+                  {imported && <em>Histórico enviado pelo estudante</em>}
+                  {manual && <em>Equivalência escolhida pelo estudante</em>}
+                </span>
                 <span className={`course-row__status course-row__status--${visual.tone}`}>{component.estado_academico.label}</span>
-                <span className="course-row__arrow">›</span>
-              </article>
+                {clickable && <span className="course-row__arrow">›</span>}
+              </button>
             )
           })}
           {visibleComponents.length === 0 && <p className="course-list__empty">Nenhuma disciplina encontrada.</p>}

@@ -1,9 +1,16 @@
+from datetime import date
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.academic import AlunoModel, CursoModel, UsuarioModel
+from app.models.academic import (
+    AlunoModel,
+    CurriculoModel,
+    CursoModel,
+    HistoricoImportacaoModel,
+    UsuarioModel,
+)
 from app.domain.entities import UserProfile
 
 
@@ -29,9 +36,66 @@ class SqlAlchemyUserRegistrationRepository:
         model = await self._session.get(UsuarioModel, user_id)
         if model is None:
             return None
+        return self._profile(model)
+
+    async def select_curriculum(
+        self, *, user_id: UUID, ppc_id: int
+    ) -> UserProfile | None:
+        model = await self._session.get(UsuarioModel, user_id)
+        if model is None:
+            return None
+
+        statement = select(CurriculoModel.id).where(
+            CurriculoModel.id == ppc_id,
+            CurriculoModel.curso_codigo == model.curso_codigo,
+        )
+        if await self._session.scalar(statement) is None:
+            return None
+
+        model.ppc_id = ppc_id
+        await self._session.execute(
+            update(HistoricoImportacaoModel)
+            .where(
+                HistoricoImportacaoModel.usuario_id == user_id,
+                HistoricoImportacaoModel.ativa.is_(True),
+            )
+            .values(ppc_referencia_id=ppc_id)
+        )
+        await self._session.commit()
+        await self._session.refresh(model)
+        return self._profile(model)
+
+    async def update_personal_data(
+        self, *, user_id: UUID, nome: str, data_nascimento: date
+    ) -> UserProfile | None:
+        model = await self._session.get(UsuarioModel, user_id)
+        if model is None:
+            return None
+        model.nome = nome
+        model.data_nascimento = data_nascimento
+        await self._session.commit()
+        await self._session.refresh(model)
+        return self._profile(model)
+
+    async def update_avatar(
+        self, *, user_id: UUID, avatar_path: str | None
+    ) -> UserProfile | None:
+        model = await self._session.get(UsuarioModel, user_id)
+        if model is None:
+            return None
+        model.avatar_path = avatar_path
+        await self._session.commit()
+        await self._session.refresh(model)
+        return self._profile(model)
+
+    @staticmethod
+    def _profile(model: UsuarioModel) -> UserProfile:
         return UserProfile(
             id=model.id,
             matricula=model.matricula,
             curso_codigo=model.curso_codigo,
             nome=model.nome,
+            ppc_id=model.ppc_id,
+            data_nascimento=model.data_nascimento,
+            avatar_path=model.avatar_path,
         )

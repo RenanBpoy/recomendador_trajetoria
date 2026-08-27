@@ -1,0 +1,13 @@
+.home-semester { margin-top: 14px; }
+.home-semester > header { margin: 0 0 7px; display: flex; align-items: center; justify-content: space-between; }
+.home-semester h2 { margin: 0; font-size: 13px; }
+.home-semester > header a { color: var(--cyan); font-size: 9px; font-weight: 750; }
+.home-semester__card { padding: 11px 12px; border: 1px solid #1c4661; border-radius: 14px; background: #0f2941; }
+.home-semester__summary { display: flex; align-items: center; justify-content: space-between; }
+.home-semester__summary span { color: var(--cyan); font-size: 8px; font-weight: 850; }
+.home-semester__summary strong { font-size: 8px; }
+.home-semester__progress { margin: 9px 0 6px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+.home-semester__progress i { height: 5px; border-radius: 4px; background: #23465e; }
+.home-semester__progress i.is-done { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+.home-semester__card p { margin: 0; color: #7795a8; font-size: 7px; }
+.home-semester__card p strong { color: #b8d0dc; }

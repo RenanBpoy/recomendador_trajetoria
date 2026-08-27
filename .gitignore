@@ -7,6 +7,8 @@
 /api/.env.local
 /api/.env.*.local
 /api/.venv/
+/api/*.egg-info/
+/api/**/*.egg-info/
 
 /api/**/__pycache__/
 /api/**/*.py[cod]

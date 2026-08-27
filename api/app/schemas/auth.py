@@ -79,6 +79,62 @@ class UserProfileOut(AuthSchema):
     matricula: str
     curso_codigo: str
     nome: str
+    ppc_id: int | None = None
+    data_nascimento: date | None = None
+    avatar_url: str | None = None
+
+
+class UpdatePersonalDataRequest(BaseModel):
+    nome: str = Field(min_length=3, max_length=200)
+    data_nascimento: date
+
+    @field_validator("nome")
+    @classmethod
+    def strip_name(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("data_nascimento")
+    @classmethod
+    def reject_future_birthdate(cls, value: date) -> date:
+        if value > date.today():
+            raise ValueError("A data de nascimento não pode estar no futuro.")
+        return value
+
+
+class UpdateEmailRequest(BaseModel):
+    email: str = Field(min_length=5, max_length=254)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", normalized):
+            raise ValueError("Informe um e-mail válido.")
+        return normalized
+
+
+class UpdatePasswordRequest(BaseModel):
+    senha: str = Field(min_length=8, max_length=128, repr=False)
+    confirmacao_senha: str = Field(min_length=8, max_length=128, repr=False)
+
+    @model_validator(mode="after")
+    def validate_confirmation(self) -> Self:
+        if self.senha != self.confirmacao_senha:
+            raise ValueError("A confirmação de senha não corresponde à senha.")
+        return self
+
+
+class EmailUpdateOut(BaseModel):
+    email_solicitado: str
+    confirmacao_necessaria: bool
+
+
+class OperationMessageOut(BaseModel):
+    mensagem: str
+
+
+class SelectCurriculumRequest(BaseModel):
+    ppc_id: int = Field(gt=0)
 
 
 class SignupOut(AuthSchema):

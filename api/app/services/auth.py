@@ -1,6 +1,14 @@
-from app.core.errors import ConflictError, ResourceNotFoundError
-from app.domain.entities import LoginResult, SignupCommand, SignupResult
-from app.domain.ports import AuthProvider, UserRegistrationRepository
+import logging
+from dataclasses import replace
+from datetime import date
+
+from app.core.errors import ApplicationError, ConflictError, ResourceNotFoundError
+from uuid import UUID
+
+from app.domain.entities import AuthUser, LoginResult, SignupCommand, SignupResult, UserProfile
+from app.domain.ports import AuthProvider, AvatarStorageProvider, UserRegistrationRepository
+
+logger = logging.getLogger(__name__)
 
 
 class AuthService:
@@ -46,3 +54,133 @@ class AuthService:
             sessao=result.sessao,
             perfil=profile,
         )
+
+
+class PerfilService:
+    _allowed_avatar_types = {"image/jpeg", "image/png", "image/webp"}
+    _max_avatar_bytes = 5 * 1024 * 1024
+
+    def __init__(
+        self,
+        users: UserRegistrationRepository,
+        auth: AuthProvider,
+        avatars: AvatarStorageProvider,
+    ) -> None:
+        self._users = users
+        self._auth = auth
+        self._avatars = avatars
+
+    async def with_avatar_url(
+        self, *, profile: UserProfile, access_token: str
+    ) -> UserProfile:
+        if not profile.avatar_path:
+            return profile
+        signed_url = await self._avatars.create_signed_url(
+            path=profile.avatar_path,
+            access_token=access_token,
+        )
+        return replace(profile, avatar_url=signed_url)
+
+    async def select_curriculum(self, *, user_id: UUID, ppc_id: int) -> UserProfile:
+        profile = await self._users.select_curriculum(user_id=user_id, ppc_id=ppc_id)
+        if profile is None:
+            raise ResourceNotFoundError("PPC compatível com o curso do usuário", ppc_id)
+        return profile
+
+    async def update_personal_data(
+        self, *, user_id: UUID, nome: str, data_nascimento: date
+    ) -> UserProfile:
+        profile = await self._users.update_personal_data(
+            user_id=user_id,
+            nome=nome,
+            data_nascimento=data_nascimento,
+        )
+        if profile is None:
+            raise ResourceNotFoundError("Perfil do usuário", user_id)
+        return profile
+
+    async def update_email(
+        self, *, access_token: str, email: str
+    ) -> AuthUser:
+        return await self._auth.update_email(
+            access_token=access_token,
+            email=email,
+        )
+
+    async def update_password(self, *, access_token: str, password: str) -> None:
+        await self._auth.update_password(
+            access_token=access_token,
+            password=password,
+        )
+
+    async def upload_avatar(
+        self,
+        *,
+        profile: UserProfile,
+        access_token: str,
+        content: bytes,
+        content_type: str,
+    ) -> UserProfile:
+        normalized_type = content_type.lower().split(";", 1)[0].strip()
+        if normalized_type not in self._allowed_avatar_types:
+            raise ApplicationError(
+                "Use uma imagem JPG, PNG ou WebP.",
+                code="invalid_avatar_type",
+            )
+        if not content:
+            raise ApplicationError(
+                "A imagem enviada está vazia.",
+                code="empty_avatar",
+            )
+        if len(content) > self._max_avatar_bytes:
+            raise ApplicationError(
+                "A foto deve ter no máximo 5 MB.",
+                code="avatar_too_large",
+            )
+
+        new_path = await self._avatars.upload(
+            user_id=profile.id,
+            access_token=access_token,
+            content=content,
+            content_type=normalized_type,
+        )
+        try:
+            updated = await self._users.update_avatar(
+                user_id=profile.id,
+                avatar_path=new_path,
+            )
+        except Exception:
+            try:
+                await self._avatars.delete(path=new_path, access_token=access_token)
+            except ApplicationError:
+                logger.warning("Não foi possível limpar o avatar após falha no banco.")
+            raise
+        if updated is None:
+            await self._avatars.delete(path=new_path, access_token=access_token)
+            raise ResourceNotFoundError("Perfil do usuário", profile.id)
+
+        if profile.avatar_path and profile.avatar_path != new_path:
+            try:
+                await self._avatars.delete(
+                    path=profile.avatar_path,
+                    access_token=access_token,
+                )
+            except ApplicationError:
+                logger.warning("Avatar antigo não pôde ser removido do Storage.")
+        return await self.with_avatar_url(profile=updated, access_token=access_token)
+
+    async def delete_avatar(
+        self, *, profile: UserProfile, access_token: str
+    ) -> UserProfile:
+        if profile.avatar_path:
+            await self._avatars.delete(
+                path=profile.avatar_path,
+                access_token=access_token,
+            )
+        updated = await self._users.update_avatar(
+            user_id=profile.id,
+            avatar_path=None,
+        )
+        if updated is None:
+            raise ResourceNotFoundError("Perfil do usuário", profile.id)
+        return updated

@@ -1,0 +1,70 @@
+.questionnaire-section {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--surface), color-mix(in srgb, var(--surface-strong) 76%, var(--bg)));
+  box-shadow: 0 12px 28px rgb(0 0 0 / 14%);
+}
+
+.questionnaire-section__main {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  align-items: start;
+  gap: 14px;
+}
+
+.questionnaire-section__icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--cyan);
+  background: color-mix(in srgb, var(--cyan) 12%, var(--bg-soft));
+  border: 1px solid color-mix(in srgb, var(--cyan) 42%, transparent);
+}
+
+.questionnaire-section__eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--cyan);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.questionnaire-section h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.questionnaire-section p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.questionnaire-section__steps {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+}
+
+.questionnaire-section__step {
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted-2) 42%, transparent);
+}
+
+.questionnaire-section__step--done {
+  background: color-mix(in srgb, var(--cyan) 55%, var(--surface-muted));
+}
+
+.questionnaire-section__step--current {
+  background: var(--cyan);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--cyan) 45%, transparent);
+}

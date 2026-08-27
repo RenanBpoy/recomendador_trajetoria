@@ -77,6 +77,11 @@ class ItemHistoricoEscolarResponse(DomainSchema):
     media_final: float | None
     faltas_total: int
     situacao_final: str
+    fonte: str = "DIARIO_CLASSE"
+    disciplina_codigo_origem: str | None = None
+    disciplina_origem: str | None = None
+    metodo_correspondencia: str | None = None
+    confianca_correspondencia: float | None = None
 
 
 class StatusResponse(BaseModel):

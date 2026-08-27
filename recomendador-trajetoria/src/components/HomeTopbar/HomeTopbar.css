@@ -1,0 +1,26 @@
+.home-topbar {
+  min-height: 70px;
+  padding: max(24px, env(safe-area-inset-top)) 20px 12px;
+  border-bottom: 1px solid rgba(59, 132, 167, 0.24);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.home-topbar__brand { display: flex; align-items: center; gap: 10px; }
+.home-topbar__brand strong { color: var(--cyan); font-size: 10px; font-weight: 900; letter-spacing: 0.1em; }
+.home-topbar__brand span { color: var(--muted-2); font-size: 9px; }
+
+.home-topbar__avatar {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--cyan);
+  border-radius: 9px;
+  color: #d9fbff;
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+}

@@ -40,7 +40,10 @@
 .course-list__items { display: flex; flex-direction: column; gap: 5px; }
 .course-list__empty { margin: 12px 4px; color: var(--muted); font-size: 11px; text-align: center; }
 
-.course-row { min-height: 47px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 12px; background: #0e2a43; display: flex; align-items: center; gap: 9px; }
+.course-row { width: 100%; min-height: 47px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 12px; color: var(--text); background: #0e2a43; text-align: left; display: flex; align-items: center; gap: 9px; }
+.course-row:disabled { opacity: 1; }
+.course-row--clickable { cursor: pointer; }
+.course-row--clickable:hover { border-color: #2a6389; background: #10304c; }
 .course-row__icon { width: 32px; height: 32px; border-radius: 9px; color: var(--bg); display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
 .course-row__icon--green { background: var(--green); }
 .course-row__icon--blue { background: var(--blue); }
@@ -49,6 +52,7 @@
 .course-row__copy { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .course-row__copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
 .course-row__copy small { color: var(--muted); font-size: 9px; }
+.course-row__copy em { color: var(--cyan); font-size: 7px; font-style: normal; font-weight: 700; }
 .course-row__status { min-width: 88px; height: 28px; padding: 0 8px; border: 1px solid currentColor; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; }
 .course-row__status--green { color: var(--green); }
 .course-row__status--blue { color: var(--blue); }

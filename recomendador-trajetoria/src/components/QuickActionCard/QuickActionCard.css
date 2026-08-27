@@ -1,0 +1,24 @@
+.home-action-card {
+  min-height: 74px;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  color: #dcecf2;
+  background: linear-gradient(145deg, #112f48, #0d273e);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 15px;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.home-action-card:hover { border-color: #2d6a86; transform: translateY(-1px); }
+.home-action-card__icon { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; }
+.home-action-card__icon svg { width: 19px; height: 19px; }
+.home-action-card__icon--cyan { color: var(--cyan); background: rgba(36, 200, 223, 0.12); }
+.home-action-card__icon--violet { color: #91a2ff; background: rgba(125, 145, 255, 0.12); }
+.home-action-card__text { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.home-action-card__text strong { font-size: 9px; }
+.home-action-card__text small { color: #7f9cad; font-size: 6.5px; line-height: 1.25; }
+.home-action-card__arrow { width: 16px; height: 16px; color: #638297; }

@@ -12,7 +12,8 @@ export class ApiError extends Error {
 
 async function request(path, { method = 'GET', body, accessToken } = {}) {
   const headers = {}
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  const isFormData = body instanceof FormData
+  if (body !== undefined && !isFormData) headers['Content-Type'] = 'application/json'
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`
 
   let response
@@ -20,7 +21,7 @@ async function request(path, { method = 'GET', body, accessToken } = {}) {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : (isFormData ? body : JSON.stringify(body)),
     })
   } catch (error) {
     throw new ApiError(
@@ -54,6 +55,24 @@ export function apiGet(path, accessToken) {
   return request(path, { accessToken })
 }
 
-export function apiPost(path, body) {
-  return request(path, { method: 'POST', body })
+export function apiPost(path, body, accessToken) {
+  return request(path, { method: 'POST', body, accessToken })
+}
+
+export function apiPut(path, body, accessToken) {
+  return request(path, { method: 'PUT', body, accessToken })
+}
+
+export function apiPatch(path, body, accessToken) {
+  return request(path, { method: 'PATCH', body, accessToken })
+}
+
+export function apiDelete(path, accessToken) {
+  return request(path, { method: 'DELETE', accessToken })
+}
+
+export function apiUpload(path, file, accessToken) {
+  const body = new FormData()
+  body.append('arquivo', file)
+  return request(path, { method: 'POST', body, accessToken })
 }

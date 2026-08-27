@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Request
 
+from app.core.errors import ApplicationError
+from app.dependencies.auth import CurrentProfileDep
 from app.dependencies.providers import HistoricoEscolarServiceDep
 from app.schemas.academic import ItemHistoricoEscolarResponse
 from app.schemas.common import ApiResponse, ErrorResponse, response_meta
@@ -17,7 +19,14 @@ async def get_school_history(
     matricula: str,
     request: Request,
     service: HistoricoEscolarServiceDep,
+    profile: CurrentProfileDep,
 ) -> ApiResponse[list[ItemHistoricoEscolarResponse]]:
+    if profile.matricula != matricula:
+        raise ApplicationError(
+            "O histórico solicitado não pertence ao usuário logado.",
+            code="historico_nao_autorizado",
+            status_code=403,
+        )
     history = await service.get(matricula)
     return ApiResponse(
         data=[ItemHistoricoEscolarResponse.model_validate(item) for item in history],

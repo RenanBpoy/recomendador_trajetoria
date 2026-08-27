@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db_session
 from app.domain.ports import AcademicDataProvider
 from app.providers.postgres import PostgresAcademicDataProvider
+from app.providers.composite import CompositeAcademicDataProvider
+from app.repositories.historicos import SqlAlchemyHistoricoImportadoRepository
 from app.repositories.postgres import (
     SqlAlchemyCurriculoRepository,
     SqlAlchemyCursoRepository,
@@ -25,12 +27,16 @@ DatabaseSession = Annotated[AsyncSession, Depends(get_db_session)]
 
 
 async def get_academic_provider(session: DatabaseSession) -> AcademicDataProvider:
-    return PostgresAcademicDataProvider(
+    primary = PostgresAcademicDataProvider(
         courses=SqlAlchemyCursoRepository(session),
         curricula=SqlAlchemyCurriculoRepository(session),
         disciplines=SqlAlchemyDisciplinaRepository(session),
         offerings=SqlAlchemyOfertaTurmaRepository(session),
         histories=SqlAlchemyHistoricoEscolarRepository(session),
+    )
+    return CompositeAcademicDataProvider(
+        primary=primary,
+        imported_histories=SqlAlchemyHistoricoImportadoRepository(session),
     )
 
 

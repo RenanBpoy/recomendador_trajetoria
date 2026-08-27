@@ -80,6 +80,91 @@ class SupabaseAuthProvider:
             sessao=session,
         )
 
+    async def get_user(self, access_token: str) -> AuthUser:
+        try:
+            async with httpx.AsyncClient(
+                timeout=self._timeout_seconds,
+                transport=self._transport,
+            ) as client:
+                response = await client.get(
+                    f"{self._auth_url}/user",
+                    headers={
+                        **self._headers,
+                        "Authorization": f"Bearer {access_token}",
+                    },
+                )
+        except httpx.RequestError as exc:
+            raise DataSourceUnavailableError(
+                "O serviço de autenticação está indisponível."
+            ) from exc
+
+        if response.status_code in {401, 403}:
+            raise AuthenticationError("Sua sessão expirou. Entre novamente.")
+        if response.is_error:
+            self._raise_provider_error(response, operation="session")
+
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise DataSourceUnavailableError(
+                "O serviço de autenticação retornou uma resposta inválida."
+            ) from exc
+        return self._user(payload, fallback_email="")
+
+    async def update_email(self, *, access_token: str, email: str) -> AuthUser:
+        payload = await self._update_user(
+            access_token=access_token,
+            json={"email": email},
+            operation="email",
+        )
+        return self._user(payload, fallback_email=email)
+
+    async def update_password(self, *, access_token: str, password: str) -> None:
+        await self._update_user(
+            access_token=access_token,
+            json={"password": password},
+            operation="password",
+        )
+
+    async def _update_user(
+        self,
+        *,
+        access_token: str,
+        json: dict[str, Any],
+        operation: str,
+    ) -> dict[str, Any]:
+        try:
+            async with httpx.AsyncClient(
+                timeout=self._timeout_seconds,
+                transport=self._transport,
+            ) as client:
+                response = await client.put(
+                    f"{self._auth_url}/user",
+                    headers={
+                        **self._headers,
+                        "Authorization": f"Bearer {access_token}",
+                    },
+                    json=json,
+                )
+        except httpx.RequestError as exc:
+            raise DataSourceUnavailableError(
+                "O serviço de autenticação está indisponível."
+            ) from exc
+
+        if response.is_error:
+            self._raise_provider_error(response, operation=operation)
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise DataSourceUnavailableError(
+                "O serviço de autenticação retornou uma resposta inválida."
+            ) from exc
+        if not isinstance(payload, dict):
+            raise DataSourceUnavailableError(
+                "O serviço de autenticação retornou uma resposta inválida."
+            )
+        return payload
+
     async def _post(
         self,
         path: str,
@@ -152,14 +237,26 @@ class SupabaseAuthProvider:
             or provider_code in {"email_exists", "user_already_exists"}
         ):
             raise ConflictError("Já existe uma conta cadastrada com este e-mail.")
+        if operation == "email" and (
+            "already" in normalized
+            or "exists" in normalized
+            or provider_code in {"email_exists", "user_already_exists"}
+        ):
+            raise ConflictError("Já existe uma conta cadastrada com este e-mail.")
         if "weak_password" in normalized or "password" in provider_code:
             raise ApplicationError(
                 "A senha não atende aos requisitos do serviço de autenticação.",
                 code="invalid_password",
                 details={"provider_code": provider_code or None},
             )
-        if operation == "login":
+        if operation in {"login", "session", "email", "password"} and response.status_code in {401, 403}:
             raise AuthenticationError()
+        if operation in {"email", "password"}:
+            raise ApplicationError(
+                "Não foi possível atualizar os dados da conta.",
+                code="account_update_rejected",
+                details={"provider_code": provider_code or None},
+            )
         raise ApplicationError(
             "Não foi possível concluir o cadastro no serviço de autenticação.",
             code="signup_rejected",
