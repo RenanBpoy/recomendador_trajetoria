@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import Select, desc, select
+from sqlalchemy import Select, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -9,6 +9,8 @@ from app.domain.entities import (
     Curriculo,
     Curso,
     Disciplina,
+    DisciplinaEquivalencia,
+    EstatisticaDisciplina,
     Docente,
     HorarioOfertaTurma,
     ItemHistoricoEscolar,
@@ -22,6 +24,7 @@ from app.models.academic import (
     CurriculoModel,
     CursoModel,
     DisciplinaModel,
+    DisciplinaEquivalenciaModel,
     DocenteModel,
     HorarioOfertaTurmaModel,
     MatriculaTurmaModel,
@@ -173,6 +176,67 @@ class SqlAlchemyDisciplinaRepository:
     async def get(self, codigo: str) -> Disciplina | None:
         model = await self._session.get(DisciplinaModel, codigo)
         return _discipline(model) if model else None
+
+    async def list_equivalences(self) -> tuple[DisciplinaEquivalencia, ...]:
+        statement = select(DisciplinaEquivalenciaModel).order_by(
+            DisciplinaEquivalenciaModel.disciplina_codigo_a,
+            DisciplinaEquivalenciaModel.disciplina_codigo_b,
+        )
+        models = (await self._session.scalars(statement)).all()
+        return tuple(
+            DisciplinaEquivalencia(
+                disciplina_codigo_a=model.disciplina_codigo_a,
+                disciplina_codigo_b=model.disciplina_codigo_b,
+                criterio=model.criterio,
+                confianca=float(model.confianca),
+            )
+            for model in models
+        )
+
+    async def get_statistics(
+        self,
+        codigos: tuple[str, ...],
+        *,
+        excluir_matricula: str | None = None,
+    ) -> tuple[EstatisticaDisciplina, ...]:
+        if not codigos:
+            return ()
+
+        total = func.count(MatriculaTurmaModel.id)
+        reprovacoes = func.count(MatriculaTurmaModel.id).filter(
+            func.lower(MatriculaTurmaModel.situacao_final).like("%reprovado%")
+        )
+        statement = (
+            select(
+                OfertaTurmaModel.disciplina_codigo,
+                total.label("total_tentativas"),
+                reprovacoes.label("total_reprovacoes"),
+            )
+            .join(
+                MatriculaTurmaModel,
+                MatriculaTurmaModel.oferta_turma_id == OfertaTurmaModel.id,
+            )
+            .where(OfertaTurmaModel.disciplina_codigo.in_(codigos))
+            .group_by(OfertaTurmaModel.disciplina_codigo)
+        )
+        if excluir_matricula is not None:
+            statement = statement.where(
+                MatriculaTurmaModel.aluno_matricula != excluir_matricula
+            )
+
+        rows = (await self._session.execute(statement)).all()
+        return tuple(
+            EstatisticaDisciplina(
+                codigo=codigo,
+                total_tentativas=total_tentativas,
+                total_reprovacoes=total_reprovacoes,
+                taxa_reprovacao=round(
+                    total_reprovacoes * 100 / total_tentativas,
+                    2,
+                ) if total_tentativas else 0.0,
+            )
+            for codigo, total_tentativas, total_reprovacoes in rows
+        )
 
 
 class SqlAlchemyOfertaTurmaRepository:

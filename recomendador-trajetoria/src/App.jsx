@@ -8,6 +8,7 @@ import Perfil from './pages/Perfil/PerfilPage'
 import Semana from './pages/Semana/Semana'
 import HorarioDisponivel from './pages/HorarioDisponivel/HorarioDisponivel'
 import Questionario from './pages/Questionario/Questionario'
+import Recomendacao from './pages/Recomendacao/Recomendacao'
 import RequireAuth from './components/RequireAuth/RequireAuth'
 
 const protectedPage = (page) => <RequireAuth>{page}</RequireAuth>
@@ -26,6 +27,7 @@ function App() {
         <Route path="/semana" element={protectedPage(<Semana />)} />
         <Route path="/horario-disponivel" element={protectedPage(<HorarioDisponivel />)} />
         <Route path="/questionario" element={protectedPage(<Questionario />)} />
+        <Route path="/recomendacao" element={protectedPage(<Recomendacao />)} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

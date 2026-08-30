@@ -1,5 +1,6 @@
 import { CircleUserRound, Grid3X3, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader/AppHeader'
 import BottomNav from '../../components/BottomNav/BottomNav'
 import CourseProgressCard from '../../components/CourseProgressCard/CourseProgressCard'
@@ -22,6 +23,7 @@ function currentAcademicPeriod() {
 }
 
 function Home() {
+  const navigate = useNavigate()
   const { profile, curriculum, summary, loading, error } = useAcademicProgress()
   const [historyLoaded, setHistoryLoaded] = useState(false)
   const [checkingHistory, setCheckingHistory] = useState(() => Boolean(profile?.id))
@@ -132,6 +134,7 @@ function Home() {
           checkingQuestionnaire={checkingQuestionnaire}
           weeklyPlanCompleted={weeklyPlanCompleted}
           checkingWeeklyPlan={checkingWeeklyPlan}
+          onStartRecommendation={() => navigate('/recomendacao')}
         />
 
       </div>

@@ -5,24 +5,32 @@ import BottomNav from '../../components/BottomNav/BottomNav'
 import CargaPlanejada from '../../components/CargaPlanejada/CargaPlanejada'
 import PlanItemDialog from '../../components/PlanItemDialog/PlanItemDialog'
 import ScheduleGrid from '../../components/ScheduleGrid/ScheduleGrid'
+import { listNotApprovedDisciplines } from '../../services/academic'
+import { getStoredAuth } from '../../services/auth'
 import { getWeeklyPlan, saveWeeklyPlan } from '../../services/plan'
-import { weeklyActivityLabel } from '../../utils/weeklyPlan'
+import { getRecommendationContext } from '../../services/recommendation'
+import { weeklyActivityLabel, weeklyDisciplineIdentity } from '../../utils/weeklyPlan'
 import './Semana.css'
 
 const activityTypes = [
-  { value: 'DISCIPLINA', label: '+ Disciplina' },
-  { value: 'ESTAGIO', label: '+ Estágio' },
-  { value: 'OUTRO', label: '+ Outro' },
+  { value: 'DISCIPLINA', label: '+ Disciplina', tone: 'mint' },
+  { value: 'ESTAGIO', label: '+ Estágio', tone: 'purple' },
+  { value: 'OUTRO', label: '+ Outro', tone: 'pink' },
 ]
 
 function viewItems(items) {
-  return items.map((item) => ({
-    ...item,
-    _key: `saved-${item.id}`,
-    hora_inicio: String(item.hora_inicio).slice(0, 5),
-    hora_fim: String(item.hora_fim).slice(0, 5),
-    observacoes: item.observacoes || '',
-  }))
+  return items.map((item) => {
+    const identity = weeklyDisciplineIdentity(item)
+    return {
+      ...item,
+      _key: `saved-${item.id}`,
+      codigo: identity.codigo,
+      grupo_disciplina: identity.grupo,
+      hora_inicio: String(item.hora_inicio).slice(0, 5),
+      hora_fim: String(item.hora_fim).slice(0, 5),
+      observacoes: item.observacoes || '',
+    }
+  })
 }
 
 function minutes(value) {
@@ -36,6 +44,14 @@ function overlaps(first, second) {
     && minutes(second.hora_inicio) < minutes(first.hora_fim)
 }
 
+function samePlanSlot(first, second) {
+  return first.tipo_atividade === second.tipo_atividade
+    && first.titulo === second.titulo
+    && first.dia_semana === second.dia_semana
+    && String(first.hora_inicio).slice(0, 5) === String(second.hora_inicio).slice(0, 5)
+    && String(first.hora_fim).slice(0, 5) === String(second.hora_fim).slice(0, 5)
+}
+
 function durationByType(items, type) {
   const totalMinutes = items
     .filter((item) => item.tipo_atividade === type)
@@ -44,6 +60,7 @@ function durationByType(items, type) {
 }
 
 function Semana() {
+  const registration = getStoredAuth()?.perfil?.matricula
   const [selectedType, setSelectedType] = useState('DISCIPLINA')
   const [savedItems, setSavedItems] = useState([])
   const [items, setItems] = useState([])
@@ -53,6 +70,10 @@ function Semana() {
   const [dirty, setDirty] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
+  const [disciplines, setDisciplines] = useState([])
+  const [disciplinesLoading, setDisciplinesLoading] = useState(false)
+  const [disciplinesError, setDisciplinesError] = useState('')
+  const [targetPeriod, setTargetPeriod] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -72,46 +93,125 @@ function Semana() {
     return () => { active = false }
   }, [])
 
+  async function loadDisciplineOptions(item) {
+    setDisciplines([])
+    setDisciplinesError('')
+    setDisciplinesLoading(true)
+    if (!registration) {
+      setDisciplinesError('Não foi possível identificar a matrícula do usuário.')
+      setDisciplinesLoading(false)
+      return
+    }
+    try {
+      let period = targetPeriod
+      if (!period) {
+        const context = await getRecommendationContext()
+        period = { ano: context.ano_alvo, semestre: context.semestre_alvo }
+        setTargetPeriod(period)
+      }
+      const available = await listNotApprovedDisciplines(registration, {
+        ...period,
+        diaSemana: item.dia_semana,
+        horaInicio: item.hora_inicio,
+        horaFim: item.hora_fim,
+      })
+      setDisciplines(available)
+    } catch (requestError) {
+      setDisciplinesError(
+        requestError.message || 'Não foi possível carregar as disciplinas desse horário.',
+      )
+    } finally {
+      setDisciplinesLoading(false)
+    }
+  }
+
   function openNewItem(day, hour) {
     const start = `${String(hour).padStart(2, '0')}:00`
     const end = `${String(Math.min(22, hour + 2)).padStart(2, '0')}:00`
     setError('')
-    setEditorItem({
+    const draft = {
       _key: `new-${Date.now()}-${day}-${hour}`,
       tipo_atividade: selectedType,
-      titulo: weeklyActivityLabel(selectedType),
+      titulo: selectedType === 'DISCIPLINA' ? '' : weeklyActivityLabel(selectedType),
+      disciplina_codigo: '',
       dia_semana: day,
       hora_inicio: start,
       hora_fim: end,
       observacoes: '',
-    })
+    }
+    setEditorItem(draft)
+    if (selectedType === 'DISCIPLINA') loadDisciplineOptions(draft)
+    else {
+      setDisciplines([])
+      setDisciplinesError('')
+      setDisciplinesLoading(false)
+    }
   }
 
-  function applyItem(item) {
-    const nextItem = String(item._key).startsWith('new-')
-      ? { ...item, _key: `draft-${Date.now()}-${Math.random().toString(36).slice(2)}` }
-      : item
-    const conflict = items.find((current) => current._key !== nextItem._key && overlaps(current, nextItem))
-    if (conflict) {
-      setError(`Esse horário se sobrepõe a “${weeklyActivityLabel(conflict.tipo_atividade)}”.`)
-      return false
+  function openExistingItem(item) {
+    setEditorItem(item)
+    if (item.tipo_atividade === 'DISCIPLINA') loadDisciplineOptions(item)
+    else {
+      setDisciplines([])
+      setDisciplinesError('')
+      setDisciplinesLoading(false)
     }
-    setItems((current) => {
-      const exists = current.some((entry) => entry._key === nextItem._key)
-      return exists
-        ? current.map((entry) => (entry._key === nextItem._key ? nextItem : entry))
-        : [...current, nextItem]
+  }
+
+  function applyItems(candidateItems, replaceKey = null) {
+    const baseItems = replaceKey
+      ? items.filter((current) => current._key !== replaceKey)
+      : items
+    const uniqueCandidates = candidateItems.filter((candidate, index, all) => (
+      all.findIndex((entry) => samePlanSlot(entry, candidate)) === index
+      && !baseItems.some((entry) => samePlanSlot(entry, candidate))
+    )).map((candidate, index) => {
+      const identity = weeklyDisciplineIdentity(candidate)
+      return {
+        ...candidate,
+        codigo: identity.codigo,
+        grupo_disciplina: identity.grupo,
+        _key: replaceKey && index === 0
+          ? replaceKey
+          : `draft-${Date.now()}-${index}-${Math.random().toString(36).slice(2)}`,
+      }
     })
+
+    const staged = [...baseItems]
+    for (const candidate of uniqueCandidates) {
+      const conflict = staged.find((current) => overlaps(current, candidate))
+      if (conflict) {
+        setError(`Esse horário se sobrepõe a “${conflict.titulo || weeklyActivityLabel(conflict.tipo_atividade)}”.`)
+        return false
+      }
+      staged.push(candidate)
+    }
+
+    setItems(staged)
     setDirty(true)
-    setFeedback('Alteração aplicada. Use “Salvar plano” para persistir.')
+    setFeedback(
+      uniqueCandidates.length > 1
+        ? 'Todos os encontros da disciplina foram adicionados. Use “Salvar plano” para persistir.'
+        : 'Alteração aplicada. Use “Salvar plano” para persistir.',
+    )
     setError('')
     return true
   }
 
   function removeItem(key) {
-    setItems((current) => current.filter((item) => item._key !== key))
+    const selectedItem = items.find((item) => item._key === key)
+    const disciplineGroup = selectedItem?.tipo_atividade === 'DISCIPLINA'
+      ? selectedItem.grupo_disciplina
+      : ''
+    setItems((current) => current.filter((item) => (
+      disciplineGroup ? item.grupo_disciplina !== disciplineGroup : item._key !== key
+    )))
     setDirty(true)
-    setFeedback('Atividade removida do rascunho. Salve o plano para confirmar.')
+    setFeedback(
+      disciplineGroup
+        ? 'A disciplina e todos os seus encontros foram removidos do rascunho. Salve o plano para confirmar.'
+        : 'Atividade removida do rascunho. Salve o plano para confirmar.',
+    )
     setError('')
   }
 
@@ -128,9 +228,9 @@ function Semana() {
     setError('')
     setFeedback('')
     try {
-      const payload = items.map(({ tipo_atividade, dia_semana, hora_inicio, hora_fim, observacoes }) => ({
+      const payload = items.map(({ tipo_atividade, titulo, dia_semana, hora_inicio, hora_fim, observacoes }) => ({
         tipo_atividade,
-        titulo: weeklyActivityLabel(tipo_atividade),
+        titulo: tipo_atividade === 'DISCIPLINA' ? titulo : weeklyActivityLabel(tipo_atividade),
         dia_semana,
         hora_inicio,
         hora_fim,
@@ -158,12 +258,12 @@ function Semana() {
       <div className="week-page__content">
         <div className="schedule-filters">
           {activityTypes.map((type) => (
-            <button key={type.value} className={selectedType === type.value ? 'is-active' : ''} type="button" onClick={() => setSelectedType(type.value)}>{type.label}</button>
+            <button key={type.value} className={`schedule-filter schedule-filter--${type.tone}${selectedType === type.value ? ' is-active' : ''}`} type="button" onClick={() => setSelectedType(type.value)}>{type.label}</button>
           ))}
         </div>
 
         {loading ? <p className="week-page__loading">Carregando plano...</p> : (
-          <ScheduleGrid entries={items} onSelectSlot={openNewItem} onSelectEntry={setEditorItem} />
+          <ScheduleGrid entries={items} onSelectSlot={openNewItem} onSelectEntry={openExistingItem} />
         )}
 
         <CargaPlanejada
@@ -184,9 +284,21 @@ function Semana() {
         <PlanItemDialog
           key={editorItem._key}
           item={editorItem}
+          disciplines={disciplines}
+          disciplinesLoading={disciplinesLoading}
+          disciplinesError={disciplinesError}
+          planItems={items}
           onClose={() => setEditorItem(null)}
-          onSave={applyItem}
+          onSave={applyItems}
           onDelete={removeItem}
+          onTypeChange={(type, item) => {
+            if (type === 'DISCIPLINA') loadDisciplineOptions(item)
+            else {
+              setDisciplines([])
+              setDisciplinesError('')
+              setDisciplinesLoading(false)
+            }
+          }}
         />
       )}
     </main>

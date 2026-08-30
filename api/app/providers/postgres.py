@@ -1,6 +1,7 @@
 from uuid import UUID
+from unicodedata import combining, normalize
 
-from app.domain.entities import ComponenteCurricular, Curriculo, Curso, Disciplina, ItemHistoricoEscolar, OfertaTurma, Page, PeriodoAcademico
+from app.domain.entities import ComponenteCurricular, Curriculo, Curso, Disciplina, DisciplinaEquivalencia, EstatisticaDisciplina, ItemHistoricoEscolar, OfertaTurma, Page, PeriodoAcademico
 from app.domain.ports import CurriculoRepository, CursoRepository, DisciplinaRepository, HistoricoEscolarRepository, OfertaTurmaRepository
 
 
@@ -35,6 +36,22 @@ class PostgresAcademicDataProvider:
     async def get_discipline(self, codigo: str) -> Disciplina | None:
         return await self._disciplines.get(codigo)
 
+    async def list_discipline_equivalences(
+        self,
+    ) -> tuple[DisciplinaEquivalencia, ...]:
+        return await self._disciplines.list_equivalences()
+
+    async def get_discipline_statistics(
+        self,
+        codigos: tuple[str, ...],
+        *,
+        excluir_matricula: str | None = None,
+    ) -> tuple[EstatisticaDisciplina, ...]:
+        return await self._disciplines.get_statistics(
+            codigos,
+            excluir_matricula=excluir_matricula,
+        )
+
     async def list_class_offerings(self, *, limit: int, cursor: UUID | None = None, curso_codigo: str | None = None, disciplina_codigo: str | None = None, ano: int | None = None, semestre: int | None = None) -> Page[OfertaTurma]:
         return await self._offerings.list(limit=limit, cursor=cursor, curso_codigo=curso_codigo, disciplina_codigo=disciplina_codigo, ano=ano, semestre=semestre)
 
@@ -48,3 +65,32 @@ class PostgresAcademicDataProvider:
         self, matricula: str
     ) -> tuple[ItemHistoricoEscolar, ...] | None:
         return await self._histories.get_by_student(matricula)
+
+    async def get_approved_discipline_codes(
+        self,
+        matricula: str,
+    ) -> tuple[str, ...] | None:
+        history = await self._histories.get_by_student(matricula)
+        if history is None:
+            return None
+        return tuple(
+            sorted(
+                {
+                    item.disciplina_codigo.strip().upper()
+                    for item in history
+                    if self._is_approved(item.situacao_final)
+                }
+            )
+        )
+
+    @staticmethod
+    def _is_approved(status: str) -> bool:
+        normalized = "".join(
+            char
+            for char in normalize("NFD", status.lower())
+            if not combining(char)
+        )
+        return any(
+            marker in normalized
+            for marker in ("aprovado", "dispensado", "dispensa", "aproveitamento")
+        )

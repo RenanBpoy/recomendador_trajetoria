@@ -29,9 +29,10 @@ recomendador_trajetoria/
 - reconhecimento de disciplinas equivalentes por código ou nome semelhante;
 - divisão dos blocos de DCG em vagas de 60 horas e escolha manual de equivalências não detectadas;
 - plano semanal interativo para incluir disciplinas, estágio e outras atividades, com edição e persistência por usuário;
-- questionário acadêmico versionado com 17 afirmações, salvamento automático e retomada do progresso;
+- questionário acadêmico versionado com 8 afirmações, salvamento automático e retomada do progresso;
 - consulta de cursos, disciplinas, PPCs e ofertas de turma pela API;
 - horários oficiais de SI e CC para `2026/2`, com vários encontros por turma e salas;
+- recomendação inicial explicável, combinando PPC, pendências, ofertas, plano semanal, desempenho, questionário e reprovação histórica;
 - cache de dados por sessão no frontend, com invalidação após alterações acadêmicas.
 
 ## Executando a API
@@ -48,7 +49,19 @@ Copy-Item .env.example .env
 
 O arquivo `api/.env` deve conter a conexão com o PostgreSQL e as configurações públicas do Supabase usadas pela autenticação.
 
-A API fica disponível em `http://localhost:8000` e sua documentação interativa em `http://localhost:8000/docs`.
+A API fica disponível em `http://localhost:8000`.
+
+### Documentação da API
+
+Com a API em execução, estão disponíveis três formatos de documentação:
+
+- Swagger interativo: `http://localhost:8000/docs`;
+- ReDoc para leitura: `http://localhost:8000/redoc`;
+- esquema OpenAPI em JSON: `http://localhost:8000/openapi.json`.
+
+O Swagger apresenta descrições e exemplos de requisição e resposta para todos os endpoints. Nas rotas autenticadas, execute primeiro `POST /api/v1/autenticacao/login`, copie o valor de `data.sessao.access_token`, clique em **Authorize** e cole somente o token. A própria interface acrescenta `Bearer` ao cabeçalho.
+
+A introdução da documentação também registra o fluxo desacoplado `Endpoint → Service → AcademicDataProvider → fonte de dados`. Os exemplos representam o contrato estável entregue ao frontend e continuam válidos se a fonte acadêmica atual for substituída.
 
 ## Executando o frontend
 
@@ -74,6 +87,8 @@ A API utiliza arquitetura em camadas. Os endpoints chamam os services, que acess
 
 O PPC escolhido pelo estudante fica salvo no perfil e é usado pela Home e pela Grade. O PDF original, CPF e documento de identidade não são armazenados; a importação guarda somente os dados acadêmicos necessários e o hash do arquivo.
 
-O questionário é carregado pela API em `GET /api/v1/questionarios/atual`. Respostas de 1 a 10 são salvas individualmente e vinculadas ao usuário e à versão respondida. Ainda não há pesos nem algoritmo de recomendação.
+O questionário é carregado pela API em `GET /api/v1/questionarios/atual`. Respostas de 1 a 10 são salvas individualmente e vinculadas ao usuário e à versão respondida. Cada uma das oito perguntas possui um peso explícito usado para ajustar o limite de carga da recomendação.
+
+A recomendação é calculada em `GET /api/v1/recomendacoes/atual`. O contexto acadêmico e o semestre derivado da matrícula podem ser consultados separadamente em `GET /api/v1/recomendacoes/contexto`. A regra considera os quatro primeiros dígitos como ano de ingresso e o quinto como semestre de ingresso.
 
 As ofertas podem ser filtradas por curso, disciplina, ano e semestre em `GET /api/v1/ofertas-turma`. Cada oferta devolve seus encontros em `horarios`; também é possível consultar somente os horários de uma oferta em `GET /api/v1/ofertas-turma/{oferta_id}/horarios`.

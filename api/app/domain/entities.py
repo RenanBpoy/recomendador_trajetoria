@@ -25,6 +25,22 @@ class Disciplina:
 
 
 @dataclass(frozen=True, slots=True)
+class DisciplinaEquivalencia:
+    disciplina_codigo_a: str
+    disciplina_codigo_b: str
+    criterio: str
+    confianca: float
+
+
+@dataclass(frozen=True, slots=True)
+class EstatisticaDisciplina:
+    codigo: str
+    total_tentativas: int
+    total_reprovacoes: int
+    taxa_reprovacao: float
+
+
+@dataclass(frozen=True, slots=True)
 class Curriculo:
     id: int
     curso_codigo: str
@@ -283,6 +299,7 @@ class QuestionarioPergunta:
     ordem_global: int
     ordem_secao: int
     texto: str
+    peso_recomendacao: float = 1.0
     resposta: int | None = None
 
 

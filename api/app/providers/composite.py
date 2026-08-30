@@ -5,6 +5,8 @@ from app.domain.entities import (
     Curriculo,
     Curso,
     Disciplina,
+    DisciplinaEquivalencia,
+    EstatisticaDisciplina,
     ItemHistoricoEscolar,
     OfertaTurma,
     Page,
@@ -49,6 +51,22 @@ class CompositeAcademicDataProvider:
     async def get_discipline(self, codigo: str) -> Disciplina | None:
         return await self._primary.get_discipline(codigo)
 
+    async def list_discipline_equivalences(
+        self,
+    ) -> tuple[DisciplinaEquivalencia, ...]:
+        return await self._primary.list_discipline_equivalences()
+
+    async def get_discipline_statistics(
+        self,
+        codigos: tuple[str, ...],
+        *,
+        excluir_matricula: str | None = None,
+    ) -> tuple[EstatisticaDisciplina, ...]:
+        return await self._primary.get_discipline_statistics(
+            codigos,
+            excluir_matricula=excluir_matricula,
+        )
+
     async def list_class_offerings(
         self,
         *,
@@ -92,3 +110,15 @@ class CompositeAcademicDataProvider:
                 ),
             )
         )
+
+    async def get_approved_discipline_codes(
+        self,
+        matricula: str,
+    ) -> tuple[str, ...] | None:
+        primary_codes = await self._primary.get_approved_discipline_codes(matricula)
+        if primary_codes is None:
+            return None
+        imported_codes = await self._imported_histories.get_approved_discipline_codes(
+            matricula
+        )
+        return tuple(sorted({*primary_codes, *imported_codes}))

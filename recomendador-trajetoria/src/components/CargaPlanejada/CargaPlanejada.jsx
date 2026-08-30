@@ -1,9 +1,9 @@
 import './CargaPlanejada.css'
 
 const categories = [
-  { key: 'disciplinas', label: 'em disciplinas', tone: 'azul' },
-  { key: 'estagio', label: 'de estágio', tone: 'verde' },
-  { key: 'outras', label: 'em outras atividades', tone: 'vermelho' },
+  { key: 'disciplinas', label: 'em disciplinas', tone: 'mint' },
+  { key: 'estagio', label: 'de estágio', tone: 'purple' },
+  { key: 'outras', label: 'em outras atividades', tone: 'pink' },
 ]
 
 function formatHours(value) {

@@ -10,6 +10,7 @@ from app.api.v1.router import router as v1_router
 from app.core.config import get_settings
 from app.core.database import dispose_database
 from app.core.errors import register_exception_handlers
+from app.core.openapi import API_DESCRIPTION, configure_openapi
 
 
 if sys.platform == "win32":
@@ -27,11 +28,17 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title=settings.app_name,
         version="0.1.0",
-        description=(
-            "Catálogo acadêmico do recomendador de trajetória, desacoplado da fonte de dados."
-        ),
+        summary="Dados acadêmicos, planejamento e recomendações de trajetória.",
+        description=API_DESCRIPTION,
         docs_url="/docs",
         redoc_url="/redoc",
+        openapi_url="/openapi.json",
+        swagger_ui_parameters={
+            "displayRequestDuration": True,
+            "filter": True,
+            "persistAuthorization": True,
+            "tryItOutEnabled": True,
+        },
         lifespan=lifespan,
     )
 
@@ -52,6 +59,7 @@ def create_app() -> FastAPI:
 
     register_exception_handlers(application)
     application.include_router(v1_router, prefix=settings.api_prefix)
+    configure_openapi(application)
     return application
 
 

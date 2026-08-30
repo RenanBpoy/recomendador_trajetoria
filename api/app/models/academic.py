@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     Column,
     ForeignKey,
     ForeignKeyConstraint,
@@ -20,6 +21,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     Time,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -50,6 +52,35 @@ class DisciplinaModel(Base):
     nome: Mapped[str] = mapped_column(Text, nullable=False)
     curriculum_components: Mapped[list[ComponenteCurricularModel]] = relationship(back_populates="discipline")
     offerings: Mapped[list[OfertaTurmaModel]] = relationship(back_populates="discipline")
+
+
+class DisciplinaEquivalenciaModel(Base):
+    __tablename__ = "disciplina_equivalencia"
+    __table_args__ = (
+        CheckConstraint(
+            "disciplina_codigo_a < disciplina_codigo_b",
+            name="ck_disciplina_equivalencia_ordem",
+        ),
+        CheckConstraint(
+            "criterio in ('NOME_IGUAL', 'SUFIXO_LETRA')",
+            name="ck_disciplina_equivalencia_criterio",
+        ),
+        CheckConstraint(
+            "confianca > 0 and confianca <= 1",
+            name="ck_disciplina_equivalencia_confianca",
+        ),
+    )
+    disciplina_codigo_a: Mapped[str] = mapped_column(
+        ForeignKey("disciplina.codigo"), primary_key=True
+    )
+    disciplina_codigo_b: Mapped[str] = mapped_column(
+        ForeignKey("disciplina.codigo"), primary_key=True
+    )
+    criterio: Mapped[str] = mapped_column(Text, nullable=False)
+    confianca: Mapped[float] = mapped_column(Numeric(3, 2), nullable=False)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
 
 
 class CurriculoModel(Base):
@@ -223,6 +254,9 @@ class QuestionarioPerguntaModel(Base):
     ordem_global: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     ordem_secao: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     texto: Mapped[str] = mapped_column(Text, nullable=False)
+    peso_recomendacao: Mapped[float] = mapped_column(
+        Numeric(4, 2), nullable=False, server_default="1.00"
+    )
     ativa: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
 

@@ -9,6 +9,8 @@ from app.domain.entities import (
     Curriculo,
     Curso,
     Disciplina,
+    DisciplinaEquivalencia,
+    EstatisticaDisciplina,
     ItemHistoricoEscolar,
     HistoricoDocumento,
     ImportacaoHistorico,
@@ -41,6 +43,13 @@ class CurriculoRepository(Protocol):
 class DisciplinaRepository(Protocol):
     async def list(self, *, limit: int, cursor: str | None = None) -> Page[Disciplina]: ...
     async def get(self, codigo: str) -> Disciplina | None: ...
+    async def list_equivalences(self) -> tuple[DisciplinaEquivalencia, ...]: ...
+    async def get_statistics(
+        self,
+        codigos: tuple[str, ...],
+        *,
+        excluir_matricula: str | None = None,
+    ) -> tuple[EstatisticaDisciplina, ...]: ...
 
 
 class OfertaTurmaRepository(Protocol):
@@ -68,6 +77,9 @@ class HistoricoImportadoRepository(Protocol):
     async def get_by_student(
         self, matricula: str
     ) -> tuple[ItemHistoricoEscolar, ...]: ...
+    async def get_approved_discipline_codes(
+        self, matricula: str
+    ) -> tuple[str, ...]: ...
 
 
 class HistoricoImportacaoRepository(Protocol):
@@ -129,6 +141,9 @@ class UserRegistrationRepository(Protocol):
     async def get_profile(self, user_id: UUID) -> UserProfile | None: ...
     async def select_curriculum(
         self, *, user_id: UUID, ppc_id: int
+    ) -> UserProfile | None: ...
+    async def select_curriculum_by_year(
+        self, *, user_id: UUID, ano_versao: int
     ) -> UserProfile | None: ...
     async def update_personal_data(
         self, *, user_id: UUID, nome: str, data_nascimento: date
@@ -193,6 +208,15 @@ class AcademicDataProvider(Protocol):
         self, *, limit: int, cursor: str | None = None
     ) -> Page[Disciplina]: ...
     async def get_discipline(self, codigo: str) -> Disciplina | None: ...
+    async def list_discipline_equivalences(
+        self,
+    ) -> tuple[DisciplinaEquivalencia, ...]: ...
+    async def get_discipline_statistics(
+        self,
+        codigos: tuple[str, ...],
+        *,
+        excluir_matricula: str | None = None,
+    ) -> tuple[EstatisticaDisciplina, ...]: ...
     async def list_class_offerings(
         self,
         *,
@@ -208,3 +232,6 @@ class AcademicDataProvider(Protocol):
     async def get_school_history(
         self, matricula: str
     ) -> tuple[ItemHistoricoEscolar, ...] | None: ...
+    async def get_approved_discipline_codes(
+        self, matricula: str
+    ) -> tuple[str, ...] | None: ...

@@ -1,6 +1,7 @@
 import { apiGet, apiPost, apiPut } from './api'
 import { getAccessToken, getStoredAuth } from './auth'
 import { cachedSessionRequest, setSessionCache } from './sessionCache'
+import { invalidateRecommendationCache } from './recommendation'
 
 const QUESTIONNAIRE_TTL = 10 * 60 * 1000
 
@@ -24,6 +25,7 @@ export async function saveQuestionnaireAnswer(questionId, value) {
     getAccessToken(),
   )
   setSessionCache(cacheKey(), questionnaire, QUESTIONNAIRE_TTL)
+  invalidateRecommendationCache()
   return questionnaire
 }
 
@@ -34,5 +36,6 @@ export async function completeCurrentQuestionnaire() {
     getAccessToken(),
   )
   setSessionCache(cacheKey(), questionnaire, QUESTIONNAIRE_TTL)
+  invalidateRecommendationCache()
   return questionnaire
 }

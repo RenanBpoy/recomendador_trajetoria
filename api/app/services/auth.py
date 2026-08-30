@@ -49,11 +49,55 @@ class AuthService:
         profile = await self._users.get_profile(result.usuario.id)
         if profile is None:
             raise ResourceNotFoundError("Perfil do usuário", result.usuario.id)
+
+        profile = await self._ensure_default_curriculum(profile)
         return LoginResult(
             usuario=result.usuario,
             sessao=result.sessao,
             perfil=profile,
         )
+
+    async def _ensure_default_curriculum(self, profile: UserProfile) -> UserProfile:
+        """Seleciona o PPC de ingresso no primeiro login que ainda não possui PPC."""
+        if profile.ppc_id is not None:
+            return profile
+
+        ano_ppc = self._infer_default_curriculum_year(
+            curso_codigo=profile.curso_codigo,
+            matricula=profile.matricula,
+        )
+        if ano_ppc is None:
+            return profile
+
+        updated = await self._users.select_curriculum_by_year(
+            user_id=profile.id,
+            ano_versao=ano_ppc,
+        )
+        if updated is None:
+            raise ResourceNotFoundError(
+                "PPC padrão do curso",
+                f"{profile.curso_codigo}/{ano_ppc}",
+            )
+        return updated
+
+    @staticmethod
+    def _infer_default_curriculum_year(
+        *, curso_codigo: str, matricula: str
+    ) -> int | None:
+        """Os cinco primeiros dígitos representam ano e semestre de ingresso."""
+        ingresso = matricula[:5]
+        if len(ingresso) != 5 or not ingresso.isdigit():
+            return None
+
+        ano_semestre = int(ingresso)
+        if curso_codigo == "314":
+            return 2026 if ano_semestre >= 20252 else 2009
+        if curso_codigo == "307":
+            if ano_semestre <= 20232:
+                return 2010
+            if ano_semestre >= 20241:
+                return 2024
+        return None
 
 
 class PerfilService:

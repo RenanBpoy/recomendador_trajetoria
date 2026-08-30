@@ -1,5 +1,6 @@
 import { ArrowRight, Check, Clock3 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import RecommendationCTA from '../RecommendationCTA/RecommendationCTA'
 import './FirstRecommendationSteps.css'
 
 function StepMarker({ number, completed }) {
@@ -40,6 +41,7 @@ function FirstRecommendationSteps({
   checkingQuestionnaire = false,
   weeklyPlanCompleted = false,
   checkingWeeklyPlan = false,
+  onStartRecommendation,
 }) {
   const completedSteps = Number(historyLoaded) + Number(questionnaireCompleted) + Number(weeklyPlanCompleted)
   const percentage = Math.round((completedSteps / 3) * 100)
@@ -143,6 +145,12 @@ function FirstRecommendationSteps({
           </article>
         )}
       </div>
+
+      <RecommendationCTA
+        enabled={!checking && completedSteps === 3}
+        checking={checking}
+        onStart={onStartRecommendation}
+      />
     </section>
   )
 }

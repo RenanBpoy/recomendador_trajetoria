@@ -1,6 +1,7 @@
 import { apiDelete, apiGet, apiPatch, apiPut, apiUpload } from './api'
 import { getAccessToken, getStoredAuth } from './auth'
 import { cachedSessionRequest, invalidateSessionCache } from './sessionCache'
+import { invalidateRecommendationCache } from './recommendation'
 
 const CATALOG_TTL = 60 * 60 * 1000
 const STUDENT_TTL = 10 * 60 * 1000
@@ -20,6 +21,7 @@ function cachedAcademicGet(key, path, { ttlMs = STUDENT_TTL, force = false } = {
 
 export function invalidateAcademicCache() {
   invalidateSessionCache(academicScope())
+  invalidateRecommendationCache()
 }
 
 export function listCourseCurricula(courseCode, options = {}) {
@@ -51,6 +53,28 @@ export function getSchoolHistory(registration, options = {}) {
     `aluno:${registration}:historico`,
     `/alunos/${encodeURIComponent(registration)}/historico`,
     options,
+  )
+}
+
+export function listNotApprovedDisciplines(registration, {
+  ano,
+  semestre,
+  diaSemana,
+  horaInicio,
+  horaFim,
+  force = false,
+} = {}) {
+  const query = new URLSearchParams({
+    ano: String(ano),
+    semestre: String(semestre),
+    dia_semana: String(diaSemana),
+    hora_inicio: horaInicio,
+    hora_fim: horaFim,
+  })
+  return cachedAcademicGet(
+    `aluno:${registration}:ofertas-nao-aprovadas:${query}`,
+    `/alunos/${encodeURIComponent(registration)}/disciplinas-nao-aprovadas?${query}`,
+    { force },
   )
 }
 

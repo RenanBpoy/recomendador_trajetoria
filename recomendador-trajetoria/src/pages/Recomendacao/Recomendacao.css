@@ -1,0 +1,112 @@
+.recommendation-page__content {
+  flex: 1;
+  padding: 8px 30px calc(var(--nav-space) + 16px);
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.recommendation-page__content::-webkit-scrollbar { display: none; }
+
+.recommendation-summary {
+  position: relative;
+  min-height: 112px;
+  padding: 17px;
+  overflow: hidden;
+  border: 1px solid rgba(34, 211, 238, .35);
+  border-radius: 20px;
+  background: radial-gradient(circle at 100% 0%, rgba(34, 211, 238, .15), transparent 150px), var(--surface-strong);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.recommendation-summary__icon {
+  width: 39px;
+  height: 39px;
+  border-radius: 13px;
+  color: #00283b;
+  background: var(--cyan);
+  display: grid;
+  place-items: center;
+}
+
+.recommendation-summary span,
+.recommendation-section-heading span { color: var(--cyan); font-size: 6px; font-weight: 900; letter-spacing: .13em; }
+.recommendation-summary h2 { margin: 5px 0 0; font-size: 14px; line-height: 1.25; }
+.recommendation-summary p { max-width: 225px; margin: 7px 0 0; color: var(--muted); font-size: 8px; line-height: 1.45; }
+.recommendation-summary > strong { grid-column: 2; color: var(--green); font-size: 9px; }
+
+.recommendation-schedule,
+.recommended-disciplines { display: flex; flex-direction: column; gap: 10px; }
+
+.recommendation-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.recommendation-section-heading h2 { margin: 4px 0 0; font-size: 14px; }
+.recommendation-section-heading small { padding: 5px 8px; border-radius: 999px; color: var(--muted); background: var(--surface); font-size: 7px; font-weight: 800; }
+.recommended-disciplines__list { display: flex; flex-direction: column; gap: 9px; }
+.recommendation-apply-button { min-height: 46px; border-radius: 14px; font-size: 10px; }
+.recommendation-plan-feedback { margin: 0; padding: 9px 11px; border-radius: 11px; font-size: 9px; line-height: 1.45; }
+.recommendation-plan-feedback.is-success { color: var(--green); background: rgba(52, 211, 153, .09); }
+.recommendation-plan-feedback.is-error { color: var(--pink); background: rgba(255, 77, 136, .09); }
+
+.recommendation-state,
+.recommendation-empty {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.recommendation-state {
+  min-height: 180px;
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recommendation-state strong { color: var(--text); font-size: 13px; }
+.recommendation-state p { max-width: 240px; margin: 0; font-size: 9px; line-height: 1.5; }
+.recommendation-state--error svg { color: var(--pink); }
+.recommendation-state button {
+  margin-top: 6px;
+  padding: 9px 13px;
+  border: 0;
+  border-radius: 11px;
+  color: #00283b;
+  background: var(--cyan);
+  font: inherit;
+  font-size: 9px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.recommendation-state__spinner { color: var(--cyan); animation: recommendation-spin .9s linear infinite; }
+@keyframes recommendation-spin { to { transform: rotate(360deg); } }
+
+.recommendation-empty { margin: 0; padding: 18px; color: var(--muted); font-size: 9px; text-align: center; }
+
+/* Tons adicionais pertencem exclusivamente à visualização de recomendação. */
+.recommendation-page .weekly-calendar__event--amber { color: #4d3910; background: #f2c879; }
+.recommendation-page .weekly-calendar__event--peach { color: #5b3021; background: #f1ad8e; }
+.recommendation-page .weekly-calendar__event--lilac { color: #432b5a; background: #c8a7e8; }
+.recommendation-page .weekly-calendar__event--sage { color: #36451b; background: #c1da83; }
+
+@media (max-width: 350px) {
+  .recommendation-page__content { padding-inline: 18px; }
+  .recommendation-summary { grid-template-columns: 1fr; }
+  .recommendation-summary__icon { display: none; }
+  .recommendation-summary > strong { grid-column: 1; }
+}

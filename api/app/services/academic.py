@@ -1,6 +1,8 @@
+from datetime import time
 from uuid import UUID
+from unicodedata import combining, normalize
 
-from app.core.errors import ResourceNotFoundError
+from app.core.errors import ApplicationError, ResourceNotFoundError
 from app.domain.entities import (
     ComponenteCurricular,
     Curriculo,
@@ -103,3 +105,71 @@ class HistoricoEscolarService:
         if history is None:
             raise ResourceNotFoundError("Aluno", matricula)
         return history
+
+    async def list_available_discipline_offerings(
+        self,
+        matricula: str,
+        *,
+        ano: int,
+        semestre: int,
+        dia_semana: int,
+        hora_inicio: time,
+        hora_fim: time,
+    ) -> tuple[OfertaTurma, ...]:
+        """Lista ofertas não aprovadas que coincidem com o intervalo solicitado."""
+
+        if hora_fim <= hora_inicio:
+            raise ApplicationError(
+                "O fim do intervalo deve ser posterior ao início.",
+                code="intervalo_horario_invalido",
+            )
+
+        approved = await self._provider.get_approved_discipline_codes(matricula)
+        if approved is None:
+            raise ResourceNotFoundError("Aluno", matricula)
+        approved_codes = {code.strip().upper() for code in approved}
+
+        offerings: dict[UUID, OfertaTurma] = {}
+        cursor: UUID | None = None
+        visited_cursors: set[str] = set()
+        while True:
+            page = await self._provider.list_class_offerings(
+                limit=100,
+                cursor=cursor,
+                ano=ano,
+                semestre=semestre,
+            )
+            for offering in page.items:
+                code = offering.disciplina_codigo.strip().upper()
+                matches_interval = any(
+                    schedule.dia_semana == dia_semana
+                    and schedule.hora_inicio < hora_fim
+                    and hora_inicio < schedule.hora_fim
+                    for schedule in offering.horarios
+                )
+                if code not in approved_codes and matches_interval:
+                    offerings[offering.id] = offering
+
+            if page.next_cursor is None or page.next_cursor in visited_cursors:
+                break
+            visited_cursors.add(page.next_cursor)
+            cursor = UUID(page.next_cursor)
+
+        return tuple(
+            sorted(
+                offerings.values(),
+                key=lambda offering: (
+                    self._normalized_text(offering.disciplina_nome),
+                    offering.disciplina_codigo,
+                    offering.codigo_turma,
+                ),
+            )
+        )
+
+    @staticmethod
+    def _normalized_text(value: str) -> str:
+        return "".join(
+            char
+            for char in normalize("NFD", value.lower())
+            if not combining(char)
+        )

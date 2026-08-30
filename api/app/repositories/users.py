@@ -52,11 +52,33 @@ class SqlAlchemyUserRegistrationRepository:
         if await self._session.scalar(statement) is None:
             return None
 
+        return await self._save_curriculum_selection(model=model, ppc_id=ppc_id)
+
+    async def select_curriculum_by_year(
+        self, *, user_id: UUID, ano_versao: int
+    ) -> UserProfile | None:
+        model = await self._session.get(UsuarioModel, user_id)
+        if model is None:
+            return None
+
+        statement = select(CurriculoModel.id).where(
+            CurriculoModel.curso_codigo == model.curso_codigo,
+            CurriculoModel.ano_versao == ano_versao,
+        )
+        ppc_id = await self._session.scalar(statement)
+        if ppc_id is None:
+            return None
+
+        return await self._save_curriculum_selection(model=model, ppc_id=ppc_id)
+
+    async def _save_curriculum_selection(
+        self, *, model: UsuarioModel, ppc_id: int
+    ) -> UserProfile:
         model.ppc_id = ppc_id
         await self._session.execute(
             update(HistoricoImportacaoModel)
             .where(
-                HistoricoImportacaoModel.usuario_id == user_id,
+                HistoricoImportacaoModel.usuario_id == model.id,
                 HistoricoImportacaoModel.ativa.is_(True),
             )
             .values(ppc_referencia_id=ppc_id)

@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from unicodedata import combining, normalize
 from uuid import UUID
 
 from sqlalchemy import and_, delete, exists, select, update
@@ -92,6 +93,48 @@ class SqlAlchemyHistoricoImportadoRepository:
                 confianca_correspondencia=float(row.confianca),
             )
             for row in rows
+        )
+
+    async def get_approved_discipline_codes(
+        self,
+        matricula: str,
+    ) -> tuple[str, ...]:
+        statement = (
+            select(
+                ItemHistoricoImportadoModel.codigo_original,
+                ItemHistoricoImportadoModel.situacao,
+            )
+            .join(
+                HistoricoImportacaoModel,
+                HistoricoImportacaoModel.id == ItemHistoricoImportadoModel.importacao_id,
+            )
+            .join(UsuarioModel, UsuarioModel.id == HistoricoImportacaoModel.usuario_id)
+            .where(
+                UsuarioModel.matricula == matricula,
+                HistoricoImportacaoModel.ativa.is_(True),
+            )
+        )
+        rows = (await self._session.execute(statement)).all()
+        return tuple(
+            sorted(
+                {
+                    str(row.codigo_original).strip().upper()
+                    for row in rows
+                    if self._is_approved(str(row.situacao))
+                }
+            )
+        )
+
+    @staticmethod
+    def _is_approved(status: str) -> bool:
+        normalized = "".join(
+            char
+            for char in normalize("NFD", status.lower())
+            if not combining(char)
+        )
+        return any(
+            marker in normalized
+            for marker in ("aprovado", "dispensado", "dispensa", "aproveitamento")
         )
 
 

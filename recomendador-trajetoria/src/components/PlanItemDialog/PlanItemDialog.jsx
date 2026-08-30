@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { weeklyActivityLabel } from '../../utils/weeklyPlan'
+import DisciplinePlanPicker from '../DisciplinePlanPicker/DisciplinePlanPicker'
 import ProfileDialog from '../ProfileDialog/ProfileDialog'
 import './PlanItemDialog.css'
 
@@ -11,9 +12,43 @@ const days = [
   { value: 5, label: 'Sexta-feira' },
 ]
 
-const times = Array.from({ length: 8 }, (_, index) => `${String(8 + index * 2).padStart(2, '0')}:00`)
+const times = Array.from({ length: 29 }, (_, index) => {
+  const totalMinutes = 8 * 60 + index * 30
+  const hour = Math.floor(totalMinutes / 60)
+  const minute = totalMinutes % 60
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+})
 
-function PlanItemDialog({ item, onClose, onSave, onDelete }) {
+function defaultEndTime(start) {
+  const [hour, minute] = start.split(':').map(Number)
+  const totalMinutes = Math.min(22 * 60, hour * 60 + minute + 120)
+  return `${String(Math.floor(totalMinutes / 60)).padStart(2, '0')}:${String(totalMinutes % 60).padStart(2, '0')}`
+}
+
+function minutes(value) {
+  const [hour, minute] = String(value).split(':').map(Number)
+  return hour * 60 + minute
+}
+
+function offeringMatchesItem(offering, item) {
+  return offering.disciplina_nome === item.titulo && offering.horarios.some((schedule) => (
+    schedule.dia_semana === item.dia_semana
+    && minutes(schedule.hora_inicio) < minutes(item.hora_fim)
+    && minutes(item.hora_inicio) < minutes(schedule.hora_fim)
+  ))
+}
+
+function PlanItemDialog({
+  item,
+  disciplines = [],
+  disciplinesLoading = false,
+  disciplinesError = '',
+  planItems = [],
+  onClose,
+  onSave,
+  onDelete,
+  onTypeChange,
+}) {
   const [form, setForm] = useState(item)
   const [submitError, setSubmitError] = useState('')
   const endTimes = useMemo(
@@ -21,24 +56,55 @@ function PlanItemDialog({ item, onClose, onSave, onDelete }) {
     [form.hora_inicio],
   )
 
+  const selectedOffering = disciplines.find(
+    (offering) => offering.id === form.oferta_turma_id,
+  ) || disciplines.find((offering) => offeringMatchesItem(offering, form)) || null
+
   function change(field, value) {
     setSubmitError('')
     setForm((current) => {
       const updated = { ...current, [field]: value }
+      if (field === 'tipo_atividade') {
+        updated.disciplina_codigo = ''
+        updated.titulo = value === 'DISCIPLINA' ? '' : weeklyActivityLabel(value)
+      }
       if (field === 'hora_inicio' && updated.hora_fim <= value) {
-        updated.hora_fim = times.find((time) => time > value) || '22:00'
+        updated.hora_fim = defaultEndTime(value)
       }
       return updated
     })
+    if (field === 'tipo_atividade') onTypeChange?.(value, form)
   }
 
   function submit(event) {
     event.preventDefault()
-    const saved = onSave({
-      ...form,
-      titulo: weeklyActivityLabel(form.tipo_atividade),
-      observacoes: form.observacoes.trim() || null,
-    })
+    if (form.tipo_atividade === 'DISCIPLINA' && !selectedOffering) {
+      setSubmitError('Selecione uma disciplina antes de adicionar ao plano.')
+      return
+    }
+    const entries = form.tipo_atividade === 'DISCIPLINA'
+      ? selectedOffering.horarios.map((schedule) => ({
+        ...form,
+        oferta_turma_id: selectedOffering.id,
+        disciplina_codigo: selectedOffering.disciplina_codigo,
+        codigo: selectedOffering.disciplina_codigo,
+        grupo_disciplina: `oferta:${selectedOffering.id}`,
+        titulo: selectedOffering.disciplina_nome,
+        dia_semana: schedule.dia_semana,
+        hora_inicio: String(schedule.hora_inicio).slice(0, 5),
+        hora_fim: String(schedule.hora_fim).slice(0, 5),
+        observacoes: [
+          selectedOffering.disciplina_codigo,
+          `Turma ${selectedOffering.codigo_turma}`,
+          schedule.sala,
+        ].filter(Boolean).join(' · '),
+      }))
+      : [{
+        ...form,
+        titulo: weeklyActivityLabel(form.tipo_atividade),
+        observacoes: form.observacoes.trim() || null,
+      }]
+    const saved = onSave(entries, editing ? item._key : null)
     if (saved === false) {
       setSubmitError('Já existe outra atividade nesse período. Escolha outro dia ou horário.')
       return
@@ -63,30 +129,50 @@ function PlanItemDialog({ item, onClose, onSave, onDelete }) {
             <option value="OUTRO">Outra atividade</option>
           </select>
         </label>
-        <label>
-          <span>Dia</span>
-          <select value={form.dia_semana} onChange={(event) => change('dia_semana', Number(event.target.value))}>
-            {days.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}
-          </select>
-        </label>
-        <div className="plan-item-form__times">
-          <label>
-            <span>Início</span>
-            <select value={form.hora_inicio} onChange={(event) => change('hora_inicio', event.target.value)}>
-              {times.slice(0, -1).map((time) => <option key={time} value={time}>{time}</option>)}
-            </select>
-          </label>
-          <label>
-            <span>Fim</span>
-            <select value={form.hora_fim} onChange={(event) => change('hora_fim', event.target.value)}>
-              {endTimes.map((time) => <option key={time} value={time}>{time}</option>)}
-            </select>
-          </label>
-        </div>
-        <label>
-          <span>Observação opcional</span>
-          <textarea value={form.observacoes || ''} maxLength={500} rows={3} placeholder="Turma, local ou algum lembrete" onChange={(event) => change('observacoes', event.target.value)} />
-        </label>
+        {form.tipo_atividade === 'DISCIPLINA' && (
+          <DisciplinePlanPicker
+            disciplines={disciplines}
+            selectedOfferingId={selectedOffering?.id || ''}
+            loading={disciplinesLoading}
+            error={disciplinesError}
+            planItems={planItems}
+            editingItem={item}
+            onSelect={(offering) => setForm((current) => ({
+              ...current,
+              oferta_turma_id: offering.id,
+              disciplina_codigo: offering.disciplina_codigo,
+              titulo: offering.disciplina_nome,
+            }))}
+          />
+        )}
+        {form.tipo_atividade !== 'DISCIPLINA' && (
+          <>
+            <label>
+              <span>Dia</span>
+              <select value={form.dia_semana} onChange={(event) => change('dia_semana', Number(event.target.value))}>
+                {days.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}
+              </select>
+            </label>
+            <div className="plan-item-form__times">
+              <label>
+                <span>Início</span>
+                <select value={form.hora_inicio} onChange={(event) => change('hora_inicio', event.target.value)}>
+                  {times.slice(0, -1).map((time) => <option key={time} value={time}>{time}</option>)}
+                </select>
+              </label>
+              <label>
+                <span>Fim</span>
+                <select value={form.hora_fim} onChange={(event) => change('hora_fim', event.target.value)}>
+                  {endTimes.map((time) => <option key={time} value={time}>{time}</option>)}
+                </select>
+              </label>
+            </div>
+            <label>
+              <span>Observação opcional</span>
+              <textarea value={form.observacoes || ''} maxLength={500} rows={3} placeholder="Local ou algum lembrete" onChange={(event) => change('observacoes', event.target.value)} />
+            </label>
+          </>
+        )}
         {submitError && <p className="plan-item-form__error" role="alert">{submitError}</p>}
         <div className="plan-item-form__actions">
           {editing && <button className="danger-button" type="button" onClick={() => { onDelete(item._key); onClose() }}>Remover</button>}

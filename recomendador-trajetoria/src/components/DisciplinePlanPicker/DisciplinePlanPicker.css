@@ -1,0 +1,31 @@
+.discipline-plan-picker { display: flex; flex-direction: column; gap: 8px; }
+.discipline-plan-picker__heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.discipline-plan-picker__heading > span { color: #c8d3df; font-size: 10px; font-weight: 750; }
+.discipline-plan-picker__heading small { color: var(--muted); font-size: 8px; }
+.discipline-plan-picker__search { min-height: 43px; padding: 0 11px; border: 1px solid var(--border); border-radius: 12px; color: var(--muted); background: var(--surface); display: flex !important; align-items: center; flex-direction: row !important; gap: 8px !important; }
+.discipline-plan-picker__search:focus-within { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(34, 211, 238, .1); }
+.discipline-plan-picker__search input { min-width: 0; min-height: 40px; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+.discipline-plan-picker__options { max-height: 300px; padding: 5px; overflow-y: auto; border: 1px solid var(--border); border-radius: 13px; background: rgba(3, 21, 42, .72); display: flex; flex-direction: column; gap: 4px; }
+.discipline-plan-picker__group { display: flex; flex-direction: column; gap: 4px; }
+.discipline-plan-picker__group + .discipline-plan-picker__group { margin-top: 6px; padding-top: 9px; border-top: 1px solid var(--border); }
+.discipline-plan-picker__group-heading { min-height: 25px; padding: 0 7px; color: var(--green); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.discipline-plan-picker__group-heading strong { display: inline-flex; align-items: center; gap: 5px; font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
+.discipline-plan-picker__group-heading span { min-width: 20px; height: 18px; padding: 0 5px; border-radius: 9px; background: rgba(52, 211, 153, .1); display: inline-flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 800; }
+.discipline-plan-picker__group--conflict .discipline-plan-picker__group-heading { color: #f2c879; }
+.discipline-plan-picker__group--conflict .discipline-plan-picker__group-heading span { background: rgba(242, 200, 121, .1); }
+.discipline-plan-picker__option,
+.discipline-plan-picker__group > button { width: 100%; min-height: 55px; padding: 9px 10px; border: 1px solid transparent; border-radius: 10px; color: var(--text); background: transparent; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 10px; cursor: pointer; }
+.discipline-plan-picker__group > button:hover { background: rgba(34, 211, 238, .07); }
+.discipline-plan-picker__group > button.is-selected { border-color: rgba(34, 211, 238, .65); background: rgba(34, 211, 238, .11); }
+.discipline-plan-picker__group > button.has-conflict { border-color: rgba(242, 200, 121, .12); background: rgba(242, 200, 121, .035); }
+.discipline-plan-picker__group > button.has-conflict:hover { background: rgba(242, 200, 121, .08); }
+.discipline-plan-picker__group > button.has-conflict.is-selected { border-color: rgba(242, 200, 121, .65); background: rgba(242, 200, 121, .11); }
+.discipline-plan-picker__options strong { font-size: 9px; line-height: 1.35; }
+.discipline-plan-picker__group > button > span:last-child { flex-shrink: 0; color: var(--cyan); font-size: 8px; font-weight: 800; }
+.discipline-plan-picker__group > button.has-conflict > span:last-child { color: #f2c879; }
+.discipline-plan-picker__description { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.discipline-plan-picker__description small { color: var(--muted); font-size: 7px; line-height: 1.35; }
+.discipline-plan-picker__conflict-detail { color: #f2c879; font-size: 7px; line-height: 1.4; }
+.discipline-plan-picker__options p { margin: 0; padding: 15px 9px; color: var(--muted); font-size: 9px; text-align: center; }
+.discipline-plan-picker__options p.is-error { color: var(--pink); }
+.discipline-plan-picker__hint { margin: 0; color: var(--muted-2); font-size: 8px; line-height: 1.45; }

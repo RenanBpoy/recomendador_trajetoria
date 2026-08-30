@@ -17,6 +17,7 @@ class QuestionarioPerguntaOut(BaseModel):
     ordem_global: int
     ordem_secao: int
     texto: str
+    peso_recomendacao: float
     resposta: int | None = None
 
 

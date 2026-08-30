@@ -83,6 +83,7 @@ class SqlAlchemyQuestionarioRepository:
                     ordem_global=question.ordem_global,
                     ordem_secao=question.ordem_secao,
                     texto=question.texto,
+                    peso_recomendacao=float(question.peso_recomendacao),
                     resposta=answer,
                 )
             )
