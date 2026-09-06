@@ -11,12 +11,24 @@ function normalize(value) {
     .toLowerCase()
 }
 
-function conflictDescription({ schedule, activity }) {
-  const day = schedule.dia_nome?.slice(0, 3) || 'Dia'
-  const meeting = `${String(schedule.hora_inicio).slice(0, 5)}–${String(schedule.hora_fim).slice(0, 5)}`
-  const activityTime = `${String(activity.hora_inicio).slice(0, 5)}–${String(activity.hora_fim).slice(0, 5)}`
+function ConflictMeeting({ schedule, activity }) {
+  const dayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
+  const day = schedule.dia_nome || dayNames[activity.dia_semana] || 'Dia não informado'
   const activityName = activity.titulo || weeklyActivityLabel(activity.tipo_atividade)
-  return `${day} ${meeting} com ${activityName} (${activityTime})`
+  return (
+    <span className="discipline-plan-picker__conflict">
+      <span className="discipline-plan-picker__conflict-day">
+        <AlertTriangle size={12} aria-hidden="true" />
+        Conflito: {day}
+      </span>
+      <span className="discipline-plan-picker__meeting">
+        <span className="discipline-plan-picker__blocking-activity">{activityName}</span>
+        <span className="discipline-plan-picker__time">
+          {String(activity.hora_inicio).slice(0, 5)} às {String(activity.hora_fim).slice(0, 5)}
+        </span>
+      </span>
+    </span>
+  )
 }
 
 function DisciplinePlanPicker({
@@ -26,6 +38,7 @@ function DisciplinePlanPicker({
   error,
   planItems = [],
   editingItem = null,
+  showHeading = true,
   onSelect,
 }) {
   const [query, setQuery] = useState('')
@@ -51,41 +64,49 @@ function DisciplinePlanPicker({
         type="button"
         role="option"
         aria-selected={selected}
-        className={`${selected ? 'is-selected' : ''}${hasConflict ? ' has-conflict' : ''}`}
+        className={`discipline-plan-picker__option${selected ? ' is-selected' : ''}${hasConflict ? ' has-conflict' : ''}`}
         onClick={() => onSelect(offering)}
       >
-        <span className="discipline-plan-picker__description">
+        <span className="discipline-plan-picker__option-heading">
           <strong>{offering.disciplina_nome}</strong>
-          <small>
-            {offering.horarios.map((schedule) => (
-              `${schedule.dia_nome.slice(0, 3)} ${String(schedule.hora_inicio).slice(0, 5)}–${String(schedule.hora_fim).slice(0, 5)}`
-            )).join(' · ')}
-          </small>
+          <span className="discipline-plan-picker__code">{offering.disciplina_codigo}</span>
+        </span>
+        <span className="discipline-plan-picker__description">
+          <span className="discipline-plan-picker__meetings">
+            {offering.horarios.map((schedule, index) => (
+              <span className="discipline-plan-picker__meeting" key={schedule.id ?? index}>
+                <span>{schedule.dia_nome}</span>
+                <span className="discipline-plan-picker__time">
+                  {String(schedule.hora_inicio).slice(0, 5)} às {String(schedule.hora_fim).slice(0, 5)}
+                </span>
+              </span>
+            ))}
+          </span>
           {hasConflict && (
             <span className="discipline-plan-picker__conflict-detail">
-              {visibleConflicts.map(conflictDescription).join(' · ')}
-              {remainingConflicts > 0 ? ` · +${remainingConflicts} conflito(s)` : ''}
+              {visibleConflicts.map((conflict, index) => <ConflictMeeting key={index} {...conflict} />)}
+              {remainingConflicts > 0 && <span>+{remainingConflicts} conflito(s)</span>}
             </span>
           )}
         </span>
-        <span>{offering.disciplina_codigo} · T{offering.codigo_turma}</span>
       </button>
     )
   }
 
   return (
-    <section className="discipline-plan-picker" aria-labelledby="discipline-plan-picker-title">
-      <div className="discipline-plan-picker__heading">
+    <section className="discipline-plan-picker" aria-label="Escolher disciplina">
+      {showHeading && <div className="discipline-plan-picker__heading">
         <span id="discipline-plan-picker-title">Disciplina</span>
-        {!loading && !error && <small>{disciplines.length} turmas</small>}
-      </div>
+        {!loading && !error && <small>{disciplines.length} {disciplines.length === 1 ? 'opção' : 'opções'}</small>}
+      </div>}
 
       <label className="discipline-plan-picker__search">
-        <Search size={14} />
+        <Search size={17} aria-hidden="true" />
         <input
           type="search"
           value={query}
           placeholder="Buscar por nome ou código"
+          aria-label="Buscar disciplina por nome ou código"
           onChange={(event) => setQuery(event.target.value)}
         />
       </label>
@@ -98,7 +119,7 @@ function DisciplinePlanPicker({
           <>
             <section className="discipline-plan-picker__group" aria-labelledby="available-disciplines-title">
               <div className="discipline-plan-picker__group-heading">
-                <strong id="available-disciplines-title">Disponíveis</strong>
+                <strong id="available-disciplines-title"><i className="discipline-plan-picker__dot" aria-hidden="true" />Disponíveis</strong>
                 <span>{groups.available.length}</span>
               </div>
               {groups.available.length

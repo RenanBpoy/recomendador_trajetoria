@@ -50,7 +50,8 @@ function Recomendacao() {
       risco: item.nivel_risco,
       reprovacao: item.taxa_reprovacao,
       horasSemanais: item.horas_semanais,
-      observacao: [...item.motivos, ...item.alertas].slice(0, 2).join(' '),
+      dedicacaoExtraclasse: item.dedicacao_extraclasse,
+      justificativa: item.justificativa,
       cor: recommendationColors[index % recommendationColors.length],
     }))
   ), [recommendation])

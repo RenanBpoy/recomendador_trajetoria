@@ -17,7 +17,9 @@ class ContextoSemestreOut(RecomendacaoSchema):
     semestre_ingresso: int
     ano_alvo: int
     semestre_alvo: int
+    semestre_cronologico: int
     semestre_curricular: int
+    regra_semestre_curricular: str
     curso_codigo: str
     ppc_id: int
     ppc_ano: int
@@ -50,6 +52,13 @@ class HorarioRecomendadoOut(RecomendacaoSchema):
     sala: str
 
 
+class IndicadorDedicacaoExtraclasseOut(RecomendacaoSchema):
+    nivel: Literal["media", "elevada"]
+    titulo: str
+    descricao: str
+    total_respostas: int
+
+
 class DisciplinaRecomendadaOut(RecomendacaoSchema):
     componente_id: int
     disciplina_codigo: str
@@ -67,9 +76,11 @@ class DisciplinaRecomendadaOut(RecomendacaoSchema):
     amostra_taxa_reprovacao: int
     nivel_risco: Literal["baixo", "medio", "alto", "desconhecido"]
     pontuacao: float
+    justificativa: str
     motivos: list[str]
     alertas: list[str]
     horarios: list[HorarioRecomendadoOut]
+    dedicacao_extraclasse: IndicadorDedicacaoExtraclasseOut | None = None
 
 
 class DisciplinaNaoSelecionadaOut(RecomendacaoSchema):

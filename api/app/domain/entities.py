@@ -41,6 +41,16 @@ class EstatisticaDisciplina:
 
 
 @dataclass(frozen=True, slots=True)
+class DedicacaoExtraclasseDisciplina:
+    codigo: str
+    respostas_ate_1h: int
+    respostas_entre_1_3h: int
+    respostas_mais_3h: int
+    total_respostas: int
+    faixa_modal: str
+
+
+@dataclass(frozen=True, slots=True)
 class Curriculo:
     id: int
     curso_codigo: str

@@ -291,14 +291,6 @@ function Semana() {
           onClose={() => setEditorItem(null)}
           onSave={applyItems}
           onDelete={removeItem}
-          onTypeChange={(type, item) => {
-            if (type === 'DISCIPLINA') loadDisciplineOptions(item)
-            else {
-              setDisciplines([])
-              setDisciplinesError('')
-              setDisciplinesLoading(false)
-            }
-          }}
         />
       )}
     </main>

@@ -10,6 +10,7 @@ from app.domain.entities import (
     Curso,
     Disciplina,
     DisciplinaEquivalencia,
+    DedicacaoExtraclasseDisciplina,
     EstatisticaDisciplina,
     ItemHistoricoEscolar,
     HistoricoDocumento,
@@ -50,6 +51,9 @@ class DisciplinaRepository(Protocol):
         *,
         excluir_matricula: str | None = None,
     ) -> tuple[EstatisticaDisciplina, ...]: ...
+    async def get_extraclass_dedications(
+        self, codigos: tuple[str, ...]
+    ) -> tuple[DedicacaoExtraclasseDisciplina, ...]: ...
 
 
 class OfertaTurmaRepository(Protocol):
@@ -217,6 +221,9 @@ class AcademicDataProvider(Protocol):
         *,
         excluir_matricula: str | None = None,
     ) -> tuple[EstatisticaDisciplina, ...]: ...
+    async def get_discipline_extraclass_dedications(
+        self, codigos: tuple[str, ...]
+    ) -> tuple[DedicacaoExtraclasseDisciplina, ...]: ...
     async def list_class_offerings(
         self,
         *,

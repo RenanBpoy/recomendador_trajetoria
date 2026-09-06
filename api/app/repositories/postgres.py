@@ -10,6 +10,7 @@ from app.domain.entities import (
     Curso,
     Disciplina,
     DisciplinaEquivalencia,
+    DedicacaoExtraclasseDisciplina,
     EstatisticaDisciplina,
     Docente,
     HorarioOfertaTurma,
@@ -25,6 +26,7 @@ from app.models.academic import (
     CursoModel,
     DisciplinaModel,
     DisciplinaEquivalenciaModel,
+    DisciplinaDedicacaoExtraclasseModel,
     DocenteModel,
     HorarioOfertaTurmaModel,
     MatriculaTurmaModel,
@@ -236,6 +238,32 @@ class SqlAlchemyDisciplinaRepository:
                 ) if total_tentativas else 0.0,
             )
             for codigo, total_tentativas, total_reprovacoes in rows
+        )
+
+    async def get_extraclass_dedications(
+        self, codigos: tuple[str, ...]
+    ) -> tuple[DedicacaoExtraclasseDisciplina, ...]:
+        if not codigos:
+            return ()
+
+        statement = (
+            select(DisciplinaDedicacaoExtraclasseModel)
+            .where(
+                DisciplinaDedicacaoExtraclasseModel.disciplina_codigo.in_(codigos)
+            )
+            .order_by(DisciplinaDedicacaoExtraclasseModel.disciplina_codigo)
+        )
+        models = (await self._session.scalars(statement)).all()
+        return tuple(
+            DedicacaoExtraclasseDisciplina(
+                codigo=model.disciplina_codigo,
+                respostas_ate_1h=model.respostas_ate_1h,
+                respostas_entre_1_3h=model.respostas_entre_1_3h,
+                respostas_mais_3h=model.respostas_mais_3h,
+                total_respostas=model.total_respostas,
+                faixa_modal=model.faixa_modal,
+            )
+            for model in models
         )
 
 

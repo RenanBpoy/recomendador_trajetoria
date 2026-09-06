@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { weeklyActivityLabel } from '../../utils/weeklyPlan'
 import DisciplinePlanPicker from '../DisciplinePlanPicker/DisciplinePlanPicker'
 import ProfileDialog from '../ProfileDialog/ProfileDialog'
@@ -47,10 +47,12 @@ function PlanItemDialog({
   onClose,
   onSave,
   onDelete,
-  onTypeChange,
 }) {
   const [form, setForm] = useState(item)
   const [submitError, setSubmitError] = useState('')
+  const formId = useId()
+  const isDiscipline = form.tipo_atividade === 'DISCIPLINA'
+  const selectedDay = days.find((day) => day.value === form.dia_semana)?.label
   const endTimes = useMemo(
     () => times.filter((time) => time > form.hora_inicio),
     [form.hora_inicio],
@@ -64,16 +66,11 @@ function PlanItemDialog({
     setSubmitError('')
     setForm((current) => {
       const updated = { ...current, [field]: value }
-      if (field === 'tipo_atividade') {
-        updated.disciplina_codigo = ''
-        updated.titulo = value === 'DISCIPLINA' ? '' : weeklyActivityLabel(value)
-      }
       if (field === 'hora_inicio' && updated.hora_fim <= value) {
         updated.hora_fim = defaultEndTime(value)
       }
       return updated
     })
-    if (field === 'tipo_atividade') onTypeChange?.(value, form)
   }
 
   function submit(event) {
@@ -106,29 +103,29 @@ function PlanItemDialog({
       }]
     const saved = onSave(entries, editing ? item._key : null)
     if (saved === false) {
-      setSubmitError('Já existe outra atividade nesse período. Escolha outro dia ou horário.')
+      setSubmitError('Já existe outra atividade nesse período. Ajuste o horário ou selecione outro dia na grade.')
       return
     }
     onClose()
   }
 
   const editing = !String(item._key).startsWith('new-')
+  const actions = (
+    <div className="plan-item-form__actions">
+      {editing && <button className="danger-button" type="button" onClick={() => { onDelete(item._key); onClose() }}>Remover</button>}
+      <button className="profile-dialog__submit" type="submit" form={formId}>{editing ? 'Aplicar alteração' : 'Adicionar ao plano'}</button>
+    </div>
+  )
 
   return (
     <ProfileDialog
       title={editing ? 'Editar atividade' : 'Adicionar atividade'}
-      subtitle="Escolha o tipo de atividade, o dia e o período."
+      subtitle={isDiscipline ? 'Escolha a disciplina para o seu plano.' : [weeklyActivityLabel(form.tipo_atividade), selectedDay].filter(Boolean).join(' · ')}
       onClose={onClose}
+      className="plan-item-dialog"
+      footer={actions}
     >
-      <form className="plan-item-form" onSubmit={submit}>
-        <label>
-          <span>Tipo</span>
-          <select value={form.tipo_atividade} onChange={(event) => change('tipo_atividade', event.target.value)}>
-            <option value="DISCIPLINA">Disciplina</option>
-            <option value="ESTAGIO">Estágio</option>
-            <option value="OUTRO">Outra atividade</option>
-          </select>
-        </label>
+      <form id={formId} className="plan-item-form" onSubmit={submit}>
         {form.tipo_atividade === 'DISCIPLINA' && (
           <DisciplinePlanPicker
             disciplines={disciplines}
@@ -147,12 +144,6 @@ function PlanItemDialog({
         )}
         {form.tipo_atividade !== 'DISCIPLINA' && (
           <>
-            <label>
-              <span>Dia</span>
-              <select value={form.dia_semana} onChange={(event) => change('dia_semana', Number(event.target.value))}>
-                {days.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}
-              </select>
-            </label>
             <div className="plan-item-form__times">
               <label>
                 <span>Início</span>
@@ -174,10 +165,6 @@ function PlanItemDialog({
           </>
         )}
         {submitError && <p className="plan-item-form__error" role="alert">{submitError}</p>}
-        <div className="plan-item-form__actions">
-          {editing && <button className="danger-button" type="button" onClick={() => { onDelete(item._key); onClose() }}>Remover</button>}
-          <button className="profile-dialog__submit" type="submit">{editing ? 'Aplicar alteração' : 'Adicionar ao plano'}</button>
-        </div>
       </form>
     </ProfileDialog>
   )

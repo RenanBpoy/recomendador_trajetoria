@@ -1,5 +1,4 @@
 .grade-page__content { padding: 20px 24px var(--nav-space); display: flex; flex-direction: column; gap: 12px; }
-.grade-page__button { margin-top: 13px; height: 47px; min-height: 47px; }
 
 .academic-context { min-height: 62px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 15px; background: var(--surface); display: flex; align-items: center; }
 .academic-context div { display: flex; flex-direction: column; gap: 3px; }

@@ -1,4 +1,4 @@
-import { AlertTriangle, BarChart3, Clock3 } from 'lucide-react'
+import { BarChart3, BookOpenText, Clock3, Sparkles } from 'lucide-react'
 import './RecommendationDisciplineCard.css'
 
 const riskLabels = {
@@ -37,7 +37,23 @@ function RecommendationDisciplineCard({ discipline }) {
         <span style={{ width: `${hasFailureRate ? discipline.reprovacao : 0}%` }} />
       </div>
 
-      <p><AlertTriangle size={12} />{discipline.observacao}</p>
+      {discipline.dedicacaoExtraclasse && (
+        <div className={`recommendation-discipline__dedication recommendation-discipline__dedication--${discipline.dedicacaoExtraclasse.nivel}`}>
+          <BookOpenText size={14} aria-hidden="true" />
+          <div>
+            <strong>{discipline.dedicacaoExtraclasse.titulo}</strong>
+            <span>{discipline.dedicacaoExtraclasse.descricao}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="recommendation-discipline__justification">
+        <Sparkles size={13} aria-hidden="true" />
+        <div>
+          <strong>Por que a disciplina foi recomendada?</strong>
+          <p>{discipline.justificativa}</p>
+        </div>
+      </div>
     </article>
   )
 }

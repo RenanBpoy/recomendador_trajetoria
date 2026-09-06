@@ -1,7 +1,7 @@
 from uuid import UUID
 from unicodedata import combining, normalize
 
-from app.domain.entities import ComponenteCurricular, Curriculo, Curso, Disciplina, DisciplinaEquivalencia, EstatisticaDisciplina, ItemHistoricoEscolar, OfertaTurma, Page, PeriodoAcademico
+from app.domain.entities import ComponenteCurricular, Curriculo, Curso, DedicacaoExtraclasseDisciplina, Disciplina, DisciplinaEquivalencia, EstatisticaDisciplina, ItemHistoricoEscolar, OfertaTurma, Page, PeriodoAcademico
 from app.domain.ports import CurriculoRepository, CursoRepository, DisciplinaRepository, HistoricoEscolarRepository, OfertaTurmaRepository
 
 
@@ -51,6 +51,11 @@ class PostgresAcademicDataProvider:
             codigos,
             excluir_matricula=excluir_matricula,
         )
+
+    async def get_discipline_extraclass_dedications(
+        self, codigos: tuple[str, ...]
+    ) -> tuple[DedicacaoExtraclasseDisciplina, ...]:
+        return await self._disciplines.get_extraclass_dedications(codigos)
 
     async def list_class_offerings(self, *, limit: int, cursor: UUID | None = None, curso_codigo: str | None = None, disciplina_codigo: str | None = None, ano: int | None = None, semestre: int | None = None) -> Page[OfertaTurma]:
         return await self._offerings.list(limit=limit, cursor=cursor, curso_codigo=curso_codigo, disciplina_codigo=disciplina_codigo, ano=ano, semestre=semestre)

@@ -13,7 +13,7 @@ router = APIRouter(prefix="/recomendacoes", tags=["Recomendações"])
     "/contexto",
     response_model=ApiResponse[ContextoSemestreOut],
     responses={400: {"model": ErrorResponse}, 401: {"model": ErrorResponse}},
-    summary="Calcular o semestre curricular do usuário pela matrícula",
+    summary="Calcular os semestres cronológico e curricular do usuário",
 )
 async def get_recommendation_context(
     request: Request,

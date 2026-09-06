@@ -4,6 +4,7 @@ from app.domain.entities import (
     ComponenteCurricular,
     Curriculo,
     Curso,
+    DedicacaoExtraclasseDisciplina,
     Disciplina,
     DisciplinaEquivalencia,
     EstatisticaDisciplina,
@@ -66,6 +67,11 @@ class CompositeAcademicDataProvider:
             codigos,
             excluir_matricula=excluir_matricula,
         )
+
+    async def get_discipline_extraclass_dedications(
+        self, codigos: tuple[str, ...]
+    ) -> tuple[DedicacaoExtraclasseDisciplina, ...]:
+        return await self._primary.get_discipline_extraclass_dedications(codigos)
 
     async def list_class_offerings(
         self,

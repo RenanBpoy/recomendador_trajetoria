@@ -8,6 +8,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Column,
+    Computed,
     ForeignKey,
     ForeignKeyConstraint,
     Identity,
@@ -79,6 +80,45 @@ class DisciplinaEquivalenciaModel(Base):
     criterio: Mapped[str] = mapped_column(Text, nullable=False)
     confianca: Mapped[float] = mapped_column(Numeric(3, 2), nullable=False)
     criado_em: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+
+class DisciplinaDedicacaoExtraclasseModel(Base):
+    __tablename__ = "disciplina_dedicacao_extraclasse"
+    __table_args__ = (
+        CheckConstraint(
+            "respostas_ate_1h >= 0 and respostas_entre_1_3h >= 0 and respostas_mais_3h >= 0",
+            name="ck_disciplina_dedicacao_contagens_nao_negativas",
+        ),
+    )
+    disciplina_codigo: Mapped[str] = mapped_column(
+        ForeignKey("disciplina.codigo", onupdate="CASCADE", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    respostas_ate_1h: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    respostas_entre_1_3h: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    respostas_mais_3h: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    total_respostas: Mapped[int] = mapped_column(
+        SmallInteger,
+        Computed(
+            "respostas_ate_1h + respostas_entre_1_3h + respostas_mais_3h",
+            persisted=True,
+        ),
+    )
+    faixa_modal: Mapped[str] = mapped_column(
+        Text,
+        Computed(
+            "case "
+            "when respostas_mais_3h >= respostas_entre_1_3h "
+            "and respostas_mais_3h >= respostas_ate_1h then 'MAIS_DE_3H' "
+            "when respostas_entre_1_3h >= respostas_ate_1h then 'ENTRE_1_E_3H' "
+            "else 'ATE_1H' end",
+            persisted=True,
+        ),
+    )
+    fonte_referencia: Mapped[str] = mapped_column(Text, nullable=False)
+    atualizado_em: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("now()")
     )
 

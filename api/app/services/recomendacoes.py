@@ -6,10 +6,13 @@ plano semanal, histórico, taxa de reprovação e questionário por regras
 determinísticas. Nenhuma recomendação é gravada; ela é recalculada com os dados
 atuais para continuar rastreável.
 
-Regra institucional da matrícula
---------------------------------
+Período de ingresso e semestre curricular
+------------------------------------------
 Os quatro primeiros dígitos representam o ano de ingresso e o quinto dígito
 representa o semestre (1 ou 2). Exemplo: 20232... = ingresso em 2023/2.
+A matrícula define apenas o semestre cronológico. Para recomendar, o semestre
+curricular é o primeiro período do PPC com menos de 50% da carga horária
+obrigatória aprovada. Uma pendência isolada, portanto, não impede o avanço.
 
 Pesos iniciais do questionário
 ------------------------------
@@ -37,7 +40,7 @@ de 20 pontos reservado às matérias do semestre atual.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import time
 from typing import Iterable
 from unicodedata import combining, normalize
@@ -47,6 +50,7 @@ from app.core.errors import ApplicationError, ResourceNotFoundError
 from app.domain.entities import (
     ComponenteCurricular,
     Curriculo,
+    DedicacaoExtraclasseDisciplina,
     DisciplinaEquivalencia,
     EstatisticaDisciplina,
     ItemHistoricoEscolar,
@@ -66,6 +70,12 @@ REGRA_MATRICULA = (
     "Os quatro primeiros dígitos da matrícula indicam o ano de ingresso e "
     "o quinto dígito indica o semestre de ingresso (1 ou 2)."
 )
+REGRA_SEMESTRE_CURRICULAR = (
+    "O semestre curricular é o primeiro período do PPC com menos de 50% da "
+    "carga horária obrigatória aprovada. Com 50% ou mais, o período é considerado "
+    "consolidado e as disciplinas restantes passam a ser tratadas como atrasadas, "
+    "sempre respeitando o limite do semestre cronológico."
+)
 
 PESOS_INICIAIS_QUESTIONARIO = {
     "ROTINA_DESEMPENHO_DOIS_TURNOS": 0.8,
@@ -83,6 +93,7 @@ LIMITE_MINIMO_HORAS_SEMANAIS = 12.0
 LIMITE_MAXIMO_HORAS_SEMANAIS = 24.0
 TAXA_RISCO_MEDIO = 25.0
 TAXA_RISCO_ALTO = 40.0
+LIMIAR_SEMESTRE_CONSOLIDADO = 0.50
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,7 +105,9 @@ class ContextoSemestre:
     semestre_ingresso: int
     ano_alvo: int
     semestre_alvo: int
+    semestre_cronologico: int
     semestre_curricular: int
+    regra_semestre_curricular: str
     curso_codigo: str
     ppc_id: int
     ppc_ano: int
@@ -131,6 +144,14 @@ class HorarioRecomendado:
 
 
 @dataclass(frozen=True, slots=True)
+class IndicadorDedicacaoExtraclasse:
+    nivel: str
+    titulo: str
+    descricao: str
+    total_respostas: int
+
+
+@dataclass(frozen=True, slots=True)
 class DisciplinaRecomendada:
     componente_id: int
     disciplina_codigo: str
@@ -148,9 +169,11 @@ class DisciplinaRecomendada:
     amostra_taxa_reprovacao: int
     nivel_risco: str
     pontuacao: float
+    justificativa: str
     motivos: tuple[str, ...]
     alertas: tuple[str, ...]
     horarios: tuple[HorarioRecomendado, ...]
+    dedicacao_extraclasse: IndicadorDedicacaoExtraclasse | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -201,14 +224,41 @@ class RecomendacaoService:
     ) -> ContextoSemestre:
         curriculum = await self._get_curriculum(profile)
         ano_alvo, semestre_alvo = await self._target_period(ano, semestre)
-        ano_ingresso, semestre_ingresso, prefixo = self._parse_registration(
-            profile.matricula
-        )
-        semestre_curricular = self._semester_number(
-            ano_ingresso,
-            semestre_ingresso,
+        components = await self._provider.list_curriculum_components(curriculum.id)
+        history = await self._provider.get_school_history(profile.matricula)
+        equivalences = await self._provider.list_discipline_equivalences()
+        return self._build_context(
+            profile,
+            curriculum,
             ano_alvo,
             semestre_alvo,
+            components,
+            history or (),
+            equivalences,
+        )
+
+    def _build_context(
+        self,
+        profile: UserProfile,
+        curriculum: Curriculo,
+        ano_alvo: int,
+        semestre_alvo: int,
+        components: tuple[ComponenteCurricular, ...],
+        history: tuple[ItemHistoricoEscolar, ...],
+        equivalences: tuple[DisciplinaEquivalencia, ...],
+    ) -> ContextoSemestre:
+        ano_ingresso, semestre_ingresso, prefixo = self._parse_registration(profile.matricula)
+        semestre_cronologico = self._semester_number(
+            ano_ingresso, semestre_ingresso, ano_alvo, semestre_alvo
+        )
+        latest_history = self._latest_attempts(history)
+        equivalent_codes = self._equivalent_codes_map(equivalences)
+        semestre_curricular = self._effective_curricular_semester(
+            components,
+            latest_history,
+            equivalent_codes,
+            semestre_cronologico,
+            curriculum.periodos_ideais,
         )
         return ContextoSemestre(
             matricula=profile.matricula,
@@ -218,7 +268,9 @@ class RecomendacaoService:
             semestre_ingresso=semestre_ingresso,
             ano_alvo=ano_alvo,
             semestre_alvo=semestre_alvo,
+            semestre_cronologico=semestre_cronologico,
             semestre_curricular=semestre_curricular,
+            regra_semestre_curricular=REGRA_SEMESTRE_CURRICULAR,
             curso_codigo=profile.curso_codigo,
             ppc_id=curriculum.id,
             ppc_ano=curriculum.ano_versao,
@@ -232,12 +284,22 @@ class RecomendacaoService:
         ano: int | None = None,
         semestre: int | None = None,
     ) -> RecomendacaoAtual:
-        context = await self.get_context(profile, ano=ano, semestre=semestre)
         curriculum = await self._get_curriculum(profile)
+        ano_alvo, semestre_alvo = await self._target_period(ano, semestre)
         components = await self._provider.list_curriculum_components(curriculum.id)
         history = await self._provider.get_school_history(profile.matricula)
         if history is None:
             raise ResourceNotFoundError("Aluno", profile.matricula)
+        equivalences = await self._provider.list_discipline_equivalences()
+        context = self._build_context(
+            profile,
+            curriculum,
+            ano_alvo,
+            semestre_alvo,
+            components,
+            history,
+            equivalences,
+        )
         plan = await self._planos.list_by_user(profile.id)
         questionnaire = await self._questionarios.get_active(profile.id)
         offerings_page = await self._provider.list_class_offerings(
@@ -246,7 +308,6 @@ class RecomendacaoService:
             semestre=context.semestre_alvo,
         )
 
-        equivalences = await self._provider.list_discipline_equivalences()
         equivalent_codes = self._equivalent_codes_map(equivalences)
         latest_history = self._latest_attempts(history)
         candidates = tuple(
@@ -350,6 +411,28 @@ class RecomendacaoService:
             equivalent_codes,
         )
 
+        # Enriquecimento informativo posterior à seleção. Estes dados não entram
+        # em pontuação, limites, ordenação nem em qualquer regra do motor.
+        dedication_codes = tuple(sorted({
+            code
+            for item in selected
+            for code in (item.disciplina_codigo, item.oferta_disciplina_codigo)
+        }))
+        dedication_rows = await self._provider.get_discipline_extraclass_dedications(
+            dedication_codes
+        )
+        dedication_by_code = {item.codigo: item for item in dedication_rows}
+        selected = tuple(
+            replace(
+                item,
+                dedicacao_extraclasse=self._dedication_indicator(
+                    dedication_by_code.get(item.disciplina_codigo)
+                    or dedication_by_code.get(item.oferta_disciplina_codigo)
+                ),
+            )
+            for item in selected
+        )
+
         total_hours = sum(item.carga_horaria for item in selected)
         weekly_hours = round(sum(item.horas_semanais for item in selected), 1)
         delayed_count = sum(item.atrasada for item in selected)
@@ -396,7 +479,7 @@ class RecomendacaoService:
             disciplinas=selected,
             nao_selecionadas=not_selected,
             criterios=(
-                "Priorizar obrigatórias do semestre curricular calculado pela matrícula.",
+                "Priorizar obrigatórias do semestre curricular calculado pelo avanço no PPC.",
                 "Recuperar pendências antigas sem concentrar várias disciplinas de alto risco.",
                 "Adiantar disciplinas futuras somente quando forem de baixo risco e couberem na carga e no cronograma.",
                 "Usar somente ofertas do período alvo que não conflitem com o plano semanal.",
@@ -406,6 +489,28 @@ class RecomendacaoService:
             ),
             alertas=tuple(alerts),
         )
+
+    @staticmethod
+    def _dedication_indicator(
+        dedication: DedicacaoExtraclasseDisciplina | None,
+    ) -> IndicadorDedicacaoExtraclasse | None:
+        if dedication is None or dedication.faixa_modal == "ATE_1H":
+            return None
+        if dedication.faixa_modal == "ENTRE_1_E_3H":
+            return IndicadorDedicacaoExtraclasse(
+                nivel="media",
+                titulo="Tempo de dedicação média",
+                descricao="Os alunos estimam um esforço médio de 2h semanais.",
+                total_respostas=dedication.total_respostas,
+            )
+        if dedication.faixa_modal == "MAIS_DE_3H":
+            return IndicadorDedicacaoExtraclasse(
+                nivel="elevada",
+                titulo="Tempo de dedicação elevado",
+                descricao="Os alunos estimam mais de 3h de dedicação semanal.",
+                total_respostas=dedication.total_respostas,
+            )
+        return None
 
     async def _get_curriculum(self, profile: UserProfile) -> Curriculo:
         if profile.ppc_id is None:
@@ -470,6 +575,48 @@ class RecomendacaoService:
                 code="periodo_anterior_ingresso",
             )
         return number
+
+    @classmethod
+    def _effective_curricular_semester(
+        cls,
+        components: Iterable[ComponenteCurricular],
+        latest_history: dict[str, ItemHistoricoEscolar],
+        equivalent_codes: dict[str, frozenset[str]],
+        chronological_semester: int,
+        ideal_periods: int,
+    ) -> int:
+        upper_limit = max(1, min(chronological_semester, ideal_periods))
+        required_by_semester: dict[int, list[ComponenteCurricular]] = {}
+        for component in components:
+            if (
+                component.tipo_componente != "DISCIPLINA_OBRIGATORIA"
+                or not component.disciplina_codigo
+                or component.semestre_recomendado < 1
+                or component.semestre_recomendado > upper_limit
+            ):
+                continue
+            required_by_semester.setdefault(component.semestre_recomendado, []).append(component)
+
+        for semester in sorted(required_by_semester):
+            semester_components = required_by_semester[semester]
+            total_hours = sum(max(0, item.carga_horaria) for item in semester_components)
+            if total_hours <= 0:
+                continue
+            approved_hours = sum(
+                max(0, item.carga_horaria)
+                for item in semester_components
+                if cls._is_approved(
+                    cls._latest_equivalent_attempt(
+                        item.disciplina_codigo,
+                        latest_history,
+                        equivalent_codes,
+                    )
+                )
+            )
+            if approved_hours / total_hours < LIMIAR_SEMESTRE_CONSOLIDADO:
+                return semester
+
+        return upper_limit
 
     @staticmethod
     def _normalized_text(value: str) -> str:
@@ -935,6 +1082,17 @@ class RecomendacaoService:
                 amostra_taxa_reprovacao=statistic.total_tentativas if statistic else 0,
                 nivel_risco=risk,
                 pontuacao=score,
+                justificativa=self._discipline_justification(
+                    component=component,
+                    delayed=delayed,
+                    advanced=advanced,
+                    previous=previous,
+                    risk=risk,
+                    performance=performance,
+                    questionnaire_index=questionnaire_index,
+                    questionnaire_completed=questionnaire_completed,
+                    plan_considered=bool(plan),
+                ),
                 motivos=motives,
                 alertas=tuple(alerts),
                 horarios=tuple(
@@ -1039,6 +1197,120 @@ class RecomendacaoService:
         if questionnaire_completed:
             reasons.append("As respostas do questionário participaram do limite de carga.")
         return tuple(reasons)
+
+    @classmethod
+    def _discipline_justification(
+        cls,
+        *,
+        component: ComponenteCurricular,
+        delayed: bool,
+        advanced: bool,
+        previous: ItemHistoricoEscolar | None,
+        risk: str,
+        performance: ResumoDesempenho,
+        questionnaire_index: float,
+        questionnaire_completed: bool,
+        plan_considered: bool,
+    ) -> str:
+        good_recent_performance = (
+            performance.tentativas_recentes > 0
+            and performance.taxa_aprovacao_recente >= 80
+        )
+        handled_difficult_disciplines = (
+            performance.disciplinas_dificeis_aprovadas > 0
+        )
+        favorable_questionnaire = (
+            questionnaire_completed and questionnaire_index >= 0.65
+        )
+
+        if delayed:
+            if previous is not None and not cls._is_approved(previous):
+                opening = (
+                    "Esta disciplina continua pendente após uma tentativa anterior e "
+                    "foi priorizada para evitar que o atraso aumente."
+                )
+            else:
+                opening = (
+                    f"Esta disciplina está pendente desde o "
+                    f"{component.semestre_recomendado}º semestre e foi priorizada "
+                    "para ajudar a regularizar sua trajetória."
+                )
+
+            if good_recent_performance:
+                support = (
+                    "Seu bom desempenho recente indica margem para incluí-la nesta "
+                    "combinação."
+                )
+            elif risk == "alto" and handled_difficult_disciplines:
+                support = (
+                    "Seu histórico mostra aprovações em disciplinas difíceis, e o "
+                    "plano respeita o limite de matérias de alto risco."
+                )
+            elif risk == "baixo":
+                support = (
+                    "O baixo risco de reprovação e a carga compatível tornam sua "
+                    "inclusão viável."
+                )
+            else:
+                support = (
+                    "Ela cabe no limite de carga e foi combinada sem ultrapassar o "
+                    "limite de disciplinas de alto risco."
+                )
+            return f"{opening} {support}"
+
+        if advanced:
+            opening = (
+                "Esta disciplina de um semestre futuro foi antecipada porque possui "
+                "baixo risco de reprovação e cabe na carga semanal calculada."
+            )
+            support = (
+                "Os horários também são compatíveis com o seu plano semanal."
+                if plan_considered
+                else "Ela não conflita com as outras disciplinas selecionadas."
+            )
+            return f"{opening} {support}"
+
+        opening = (
+            "Esta disciplina acompanha o semestre curricular identificado pelo seu "
+            "avanço na grade."
+        )
+        if risk == "alto":
+            if good_recent_performance or handled_difficult_disciplines:
+                support = (
+                    "Apesar do risco elevado, seu desempenho anterior indica que ela "
+                    "é viável nesta combinação, respeitando o limite de matérias "
+                    "difíceis."
+                )
+            else:
+                support = (
+                    "Ela foi mantida como principal ponto de atenção, sem ultrapassar "
+                    "o limite de disciplinas de alto risco."
+                )
+        elif good_recent_performance:
+            support = (
+                "Seu bom desempenho recente e a carga compatível favorecem sua "
+                "inclusão neste semestre."
+            )
+        elif favorable_questionnaire:
+            support = (
+                "Suas respostas indicam disponibilidade compatível com a carga "
+                "necessária para cursá-la."
+            )
+        elif risk == "baixo":
+            support = (
+                "O baixo risco de reprovação ajuda a manter a combinação equilibrada."
+            )
+        elif plan_considered:
+            support = (
+                "A oferta cabe na carga calculada e não conflita com os horários "
+                "informados no seu plano."
+            )
+        else:
+            support = (
+                "A oferta cabe no limite semanal e não conflita com as outras "
+                "disciplinas selecionadas."
+            )
+        return f"{opening} {support}"
 
     @classmethod
     def _discipline_score(

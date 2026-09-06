@@ -1,5 +1,5 @@
 import { CircleHelp, CircleUserRound, GraduationCap, LockKeyhole, PanelTopClose } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader/AppHeader'
 import BottomNav from '../../components/BottomNav/BottomNav'
@@ -12,7 +12,6 @@ import { useStoredAuth } from '../../hooks/useStoredAuth'
 import { listCourseCurricula } from '../../services/academic'
 import { clearAuthSession } from '../../services/auth'
 import {
-  deleteAvatar,
   getCurrentProfile,
   requestEmailChange,
   saveSelectedCurriculum,
@@ -25,7 +24,7 @@ import './Perfil.css'
 const settings = [
   { key: 'personal', title: 'Dados pessoais', subtitle: 'Nome, e-mail e nascimento', icon: CircleUserRound },
   { key: 'academic', title: 'Dados acadêmicos', subtitle: 'Curso, matrícula e PPC', icon: GraduationCap },
-  { key: 'privacy', title: 'Privacidade', subtitle: 'Senha e foto do perfil', icon: LockKeyhole },
+  { key: 'privacy', title: 'Privacidade', subtitle: 'Senha de acesso', icon: LockKeyhole },
   { key: 'help', title: 'Ajuda e suporte', subtitle: 'Dúvidas sobre o aplicativo', icon: CircleHelp },
 ]
 
@@ -48,7 +47,6 @@ function PerfilPage() {
   const auth = useStoredAuth()
   const { profile: progressProfile, curriculum, summary, loading } = useAcademicProgress()
   const profile = auth?.perfil || progressProfile
-  const ppcSectionRef = useRef(null)
   const [curricula, setCurricula] = useState([])
   const [selectedPpcId, setSelectedPpcId] = useState(() => String(auth?.perfil?.ppc_id || ''))
   const [savingPpc, setSavingPpc] = useState(false)
@@ -103,6 +101,10 @@ function PerfilPage() {
       setEmail(auth?.usuario?.email || '')
     }
     if (panel === 'privacy') setPasswordForm({ senha: '', confirmacao_senha: '' })
+    if (panel === 'academic') {
+      setSelectedPpcId(String(profile?.ppc_id || (curricula.length === 1 ? curricula[0].id : '')))
+      setPpcFeedback('')
+    }
   }
 
   async function handleSavePpc() {
@@ -190,21 +192,6 @@ function PerfilPage() {
     }
   }
 
-  async function handleDeleteAvatar() {
-    setBusyAction('avatar-delete')
-    setPanelError('')
-    setPanelFeedback('')
-    try {
-      await deleteAvatar()
-      setAvatarFeedback('Foto removida.')
-      setPanelFeedback('A foto do perfil foi removida.')
-    } catch (requestError) {
-      setPanelError(requestError.message || 'Não foi possível remover a foto.')
-    } finally {
-      setBusyAction('')
-    }
-  }
-
   function handleLogout() {
     clearAuthSession()
     navigate('/login', { replace: true })
@@ -228,33 +215,6 @@ function PerfilPage() {
         </section>
         {avatarFeedback && <p className="profile-page__notice is-success" role="status">{avatarFeedback}</p>}
         {avatarError && <p className="profile-page__notice is-error" role="alert">{avatarError}</p>}
-
-        <section ref={ppcSectionRef} className="profile-ppc" aria-labelledby="profile-ppc-title">
-          <div><span>Currículo utilizado</span><strong id="profile-ppc-title">Escolha seu PPC</strong></div>
-          <div className="semester-tabs profile-ppc__tabs" aria-label="Selecionar PPC">
-            {curricula.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={String(item.id) === selectedPpcId ? 'is-active' : ''}
-                aria-pressed={String(item.id) === selectedPpcId}
-                onClick={() => { setSelectedPpcId(String(item.id)); setPpcFeedback('') }}
-              >
-                {item.ano_versao}
-              </button>
-            ))}
-          </div>
-          <button
-            className="profile-ppc__save"
-            type="button"
-            disabled={!selectedPpcId || savingPpc || String(profile?.ppc_id || '') === selectedPpcId}
-            onClick={handleSavePpc}
-          >
-            {savingPpc ? 'Salvando...' : 'Salvar PPC'}
-          </button>
-          {ppcFeedback && <p className="profile-ppc__feedback is-success" role="status">{ppcFeedback}</p>}
-          {ppcError && <p className="profile-ppc__feedback is-error" role="alert">{ppcError}</p>}
-        </section>
 
         <section className="course-progress">
           <div><span>Progresso no curso</span><strong>{loading ? '...' : `${summary.percentage}% concluído`}</strong></div>
@@ -317,14 +277,38 @@ function PerfilPage() {
             <div><dt>Matrícula</dt><dd>{profile?.matricula || '—'}</dd></div>
             <div><dt>PPC atual</dt><dd>{selectedCurriculum ? `${selectedCurriculum.ano_versao} — ${selectedCurriculum.nome}` : 'Ainda não selecionado'}</dd></div>
           </dl>
-          <div className="profile-dialog__actions profile-dialog__academic-action">
-            <button className="profile-dialog__submit" type="button" onClick={() => { setActivePanel(null); setTimeout(() => ppcSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0) }}>Alterar PPC</button>
-          </div>
+          <section className="profile-ppc profile-ppc--dialog" aria-labelledby="profile-ppc-title">
+            <div><strong id="profile-ppc-title">Alterar currículo</strong></div>
+            <div className="semester-tabs profile-ppc__tabs" role="group" aria-label="Selecionar PPC">
+              {curricula.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={String(item.id) === selectedPpcId ? 'is-active' : ''}
+                  aria-pressed={String(item.id) === selectedPpcId}
+                  disabled={savingPpc}
+                  onClick={() => { setSelectedPpcId(String(item.id)); setPpcFeedback('') }}
+                >
+                  {item.ano_versao}
+                </button>
+              ))}
+            </div>
+            <button
+              className="profile-dialog__submit"
+              type="button"
+              disabled={!selectedPpcId || savingPpc || !curricula.length || String(profile?.ppc_id || '') === selectedPpcId}
+              onClick={handleSavePpc}
+            >
+              {savingPpc ? 'Salvando...' : 'Salvar PPC'}
+            </button>
+            {ppcFeedback && <p className="profile-dialog__feedback is-success" role="status">{ppcFeedback}</p>}
+            {ppcError && <p className="profile-dialog__feedback is-error" role="alert">{ppcError}</p>}
+          </section>
         </ProfileDialog>
       )}
 
       {activePanel === 'privacy' && (
-        <ProfileDialog title="Privacidade" subtitle="Controle a senha e a foto associadas à conta." onClose={() => setActivePanel(null)}>
+        <ProfileDialog title="Privacidade" subtitle="Gerencie a senha de acesso à sua conta." onClose={() => setActivePanel(null)}>
           <section className="profile-dialog__section">
             <h3>Alterar senha</h3>
             <form className="profile-dialog__form" onSubmit={handlePasswordSubmit}>
@@ -332,11 +316,6 @@ function PerfilPage() {
               <FormField label="Confirmar nova senha" type="password" name="confirmacao_senha" value={passwordForm.confirmacao_senha} minLength={8} autoComplete="new-password" required onChange={(event) => setPasswordForm((current) => ({ ...current, confirmacao_senha: event.target.value }))} />
               <button className="profile-dialog__submit" type="submit" disabled={Boolean(busyAction)}>{busyAction === 'password' ? 'Atualizando...' : 'Atualizar senha'}</button>
             </form>
-          </section>
-          <section className="profile-dialog__section">
-            <h3>Foto do perfil</h3>
-            <p>A foto fica em um espaço privado e é exibida por um endereço temporário.</p>
-            <button className="danger-button profile-dialog__remove-avatar" type="button" disabled={!profile?.avatar_url || Boolean(busyAction)} onClick={handleDeleteAvatar}>{busyAction === 'avatar-delete' ? 'Removendo...' : 'Remover foto'}</button>
           </section>
           {panelFeedback && <p className="profile-dialog__feedback is-success" role="status">{panelFeedback}</p>}
           {panelError && <p className="profile-dialog__feedback is-error" role="alert">{panelError}</p>}

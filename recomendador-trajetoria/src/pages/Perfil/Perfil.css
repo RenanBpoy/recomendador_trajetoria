@@ -34,8 +34,6 @@
 .account-settings__copy small { color: var(--muted); font-size: 9px; }
 .account-settings button b { color: var(--muted); font-size: 19px; font-weight: 400; }
 .profile-page__logout { margin-top: 24px; }
-.profile-dialog__academic-action { margin-top: 16px; }
-.profile-dialog__remove-avatar { width: 100%; }
-.profile-dialog__remove-avatar:disabled { cursor: default; opacity: .45; }
+.profile-ppc--dialog { padding: 16px 0 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
 .profile-help h3 { line-height: 1.4; }
 .profile-page input[type='date'] { color-scheme: dark; }

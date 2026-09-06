@@ -2,7 +2,7 @@ import { X } from 'lucide-react'
 import { useEffect, useId } from 'react'
 import './ProfileDialog.css'
 
-function ProfileDialog({ title, subtitle, onClose, children }) {
+function ProfileDialog({ title, subtitle, onClose, children, className = '', footer }) {
   const titleId = useId()
 
   useEffect(() => {
@@ -21,7 +21,7 @@ function ProfileDialog({ title, subtitle, onClose, children }) {
         if (event.target === event.currentTarget) onClose()
       }}
     >
-      <section className="profile-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <section className={`profile-dialog ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <header className="profile-dialog__header">
           <div>
             <h2 id={titleId}>{title}</h2>
@@ -30,6 +30,7 @@ function ProfileDialog({ title, subtitle, onClose, children }) {
           <button type="button" aria-label="Fechar" onClick={onClose}><X size={18} /></button>
         </header>
         <div className="profile-dialog__body">{children}</div>
+        {footer && <footer className="profile-dialog__footer">{footer}</footer>}
       </section>
     </div>
   )

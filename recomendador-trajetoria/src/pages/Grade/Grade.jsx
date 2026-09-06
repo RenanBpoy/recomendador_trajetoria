@@ -222,7 +222,6 @@ function Grade() {
             onReview={handleReview}
           />
         )}
-        <button className="primary-button grade-page__button" type="button" disabled={!profile?.ppc_id}>Continuar</button>
       </div>
       <BottomNav active="grade" />
       <EquivalencePicker

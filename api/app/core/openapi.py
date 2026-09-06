@@ -241,7 +241,9 @@ CONTEXT = {
     "semestre_ingresso": 2,
     "ano_alvo": 2026,
     "semestre_alvo": 2,
-    "semestre_curricular": 7,
+    "semestre_cronologico": 7,
+    "semestre_curricular": 5,
+    "regra_semestre_curricular": "Primeiro período do PPC com menos de 50% da carga obrigatória aprovada. Com 50% ou mais, o período é consolidado e as disciplinas restantes são tratadas como atrasadas, respeitando o limite do semestre cronológico.",
     "curso_codigo": "314",
     "ppc_id": 1,
     "ppc_ano": 2026,
@@ -292,9 +294,16 @@ RECOMMENDATION = {
             "amostra_taxa_reprovacao": 55,
             "nivel_risco": "baixo",
             "pontuacao": 91.4,
+            "justificativa": "Esta disciplina acompanha o semestre curricular identificado pelo seu avanço na grade. Seu bom desempenho recente e a carga compatível favorecem sua inclusão neste semestre.",
             "motivos": ["Disciplina prevista para o semestre curricular atual."],
             "alertas": [],
             "horarios": [SCHEDULE],
+            "dedicacao_extraclasse": {
+                "nivel": "elevada",
+                "titulo": "Tempo de dedicação elevado",
+                "descricao": "Os alunos estimam mais de 3h de dedicação semanal.",
+                "total_respostas": 6,
+            },
         }
     ],
     "nao_selecionadas": [],
@@ -339,7 +348,7 @@ ENDPOINT_DESCRIPTIONS: dict[str, str] = {
     "GET /api/v1/questionarios/atual": "Consulta a versão ativa do questionário e incorpora as respostas já salvas pelo usuário.",
     "PUT /api/v1/questionarios/atual/respostas/{pergunta_id}": "Salva uma resposta de 1 a 10 e devolve o questionário atualizado.",
     "POST /api/v1/questionarios/atual/concluir": "Marca o questionário como concluído após validar que todas as perguntas foram respondidas.",
-    "GET /api/v1/recomendacoes/contexto": "Interpreta os cinco primeiros dígitos da matrícula e calcula o semestre curricular no período-alvo.",
+    "GET /api/v1/recomendacoes/contexto": "Usa a matrícula para obter o semestre cronológico e o avanço nas obrigatórias do PPC para calcular o semestre curricular.",
     "GET /api/v1/recomendacoes/atual": "Gera uma recomendação explicável combinando PPC, histórico, ofertas, plano semanal, questionário e estatísticas de reprovação.",
 }
 
