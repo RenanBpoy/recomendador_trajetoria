@@ -1,7 +1,7 @@
 from datetime import date
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.academic import (
@@ -17,6 +17,19 @@ from app.domain.entities import UserProfile
 class SqlAlchemyUserRegistrationRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def delete_account(self, user_id: UUID) -> None:
+        # Auth -> usuario -> dados pessoais em cascata. Nunca apagar aluno/diários.
+        # A conexão privilegiada fica exclusivamente no servidor.
+        try:
+            await self._session.execute(
+                text("DELETE FROM auth.users WHERE id = :user_id"),
+                {"user_id": user_id},
+            )
+            await self._session.commit()
+        except Exception:
+            await self._session.rollback()
+            raise
 
     async def student_exists(self, matricula: str) -> bool:
         statement = select(AlunoModel.matricula).where(

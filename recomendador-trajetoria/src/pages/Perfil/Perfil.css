@@ -36,4 +36,10 @@
 .profile-page__logout { margin-top: 24px; }
 .profile-ppc--dialog { padding: 16px 0 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
 .profile-help h3 { line-height: 1.4; }
+.profile-help__reset { width: 100%; margin-top: 9px; }
+.profile-dialog__submit.is-danger { border-color: rgba(251, 102, 128, .72); color: #ffd9e2; background: rgba(251, 102, 128, .12); }
+.profile-dialog__submit.is-danger:hover:not(:disabled) { background: rgba(251, 102, 128, .2); }
+.profile-help__confirmation { margin-top: 10px; padding: 13px; border: 1px solid rgba(251, 102, 128, .42); border-radius: 13px; background: rgba(251, 102, 128, .07); }
+.profile-help__confirmation > strong { display: block; color: #ffd9e2; font-size: 11px; line-height: 1.4; }
+.profile-help__confirmation > p { margin: 6px 0 12px; color: #d7b7c1; font-size: 9px; line-height: 1.55; }
 .profile-page input[type='date'] { color-scheme: dark; }

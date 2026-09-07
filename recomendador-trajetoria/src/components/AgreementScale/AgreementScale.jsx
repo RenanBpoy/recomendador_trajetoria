@@ -13,13 +13,13 @@ const answerLabels = {
   10: 'Concordo totalmente',
 }
 
-function AgreementScale({ selectedValue = null, onChange, disabled = false }) {
+function AgreementScale({ selectedValue = null, onChange, disabled = false, guideRef }) {
   const selectedLabel = selectedValue
     ? `${selectedValue} · ${answerLabels[selectedValue]}`
     : 'Selecione uma resposta'
 
   return (
-    <section className="agreement-scale" aria-labelledby="agreement-scale-title">
+    <section ref={guideRef} className="agreement-scale" aria-labelledby="agreement-scale-title">
       <div className="agreement-scale__heading">
         <h2 id="agreement-scale-title">Quanto esta afirmação representa você?</h2>
         <strong>{selectedLabel}</strong>

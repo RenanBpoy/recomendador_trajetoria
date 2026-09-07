@@ -360,3 +360,11 @@ class LoginResult:
     usuario: AuthUser
     sessao: AuthSession
     perfil: UserProfile | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ResultadoResetPrimeiroAcesso:
+    historicos_importados_removidos: int
+    equivalencias_manuais_removidas: int
+    questionarios_reiniciados: int
+    itens_plano_removidos: int

@@ -52,6 +52,7 @@ OPENAPI_TAGS = [
     {"name": "Alunos", "description": "Dados acadêmicos vinculados à matrícula do usuário autenticado."},
     {"name": "Históricos", "description": "Importação de PDF e equivalências de disciplinas."},
     {"name": "Perfil", "description": "Dados pessoais, PPC e foto do estudante autenticado."},
+    {"name": "Primeiro acesso", "description": "Reinício controlado dos dados usados no fluxo inicial."},
     {"name": "Plano semanal", "description": "Compromissos semanais usados para calcular disponibilidade."},
     {"name": "Questionários", "description": "Questionário pessoal e respostas usadas pela recomendação."},
     {"name": "Recomendações", "description": "Contexto curricular e recomendação acadêmica explicável."},
@@ -343,6 +344,7 @@ ENDPOINT_DESCRIPTIONS: dict[str, str] = {
     "PUT /api/v1/perfil/senha": "Substitui a senha do usuário autenticado no Supabase Auth.",
     "POST /api/v1/perfil/avatar": "Envia JPG, PNG ou WebP de até 5 MB ao bucket privado de avatares.",
     "DELETE /api/v1/perfil/avatar": "Remove a imagem do Storage e limpa sua referência no perfil.",
+    "DELETE /api/v1/primeiro-acesso/progresso": "Remove somente as importações de histórico e equivalências manuais, o preenchimento do questionário e os itens do plano semanal pertencentes ao usuário autenticado. A conta, o PPC e os dados acadêmicos originais são preservados.",
     "GET /api/v1/plano-semanal": "Consulta os compromissos persistidos usados para calcular os horários livres.",
     "PUT /api/v1/plano-semanal": "Substitui integralmente o plano semanal. Envie a lista completa que deve permanecer salva.",
     "GET /api/v1/questionarios/atual": "Consulta a versão ativa do questionário e incorpora as respostas já salvas pelo usuário.",
@@ -436,6 +438,15 @@ RESPONSE_EXAMPLES: dict[str, Any] = {
     "PUT /api/v1/perfil/senha": api_response({"mensagem": "Senha atualizada com sucesso."}),
     "POST /api/v1/perfil/avatar": api_response({**PROFILE, "avatar_url": "https://example.supabase.co/storage/v1/object/sign/avatares/avatar.webp"}),
     "DELETE /api/v1/perfil/avatar": api_response(PROFILE),
+    "DELETE /api/v1/primeiro-acesso/progresso": api_response(
+        {
+            "mensagem": "Dados do primeiro acesso removidos com sucesso.",
+            "historicos_importados_removidos": 1,
+            "equivalencias_manuais_removidas": 2,
+            "questionarios_reiniciados": 1,
+            "itens_plano_removidos": 3,
+        }
+    ),
     "GET /api/v1/plano-semanal": api_response([PLAN_ITEM]),
     "PUT /api/v1/plano-semanal": api_response([PLAN_ITEM]),
     "GET /api/v1/questionarios/atual": api_response(QUESTIONNAIRE),

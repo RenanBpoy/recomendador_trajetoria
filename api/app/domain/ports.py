@@ -27,6 +27,7 @@ from app.domain.entities import (
     PlanoSemanaItem,
     PlanoSemanaItemInput,
     QuestionarioAtual,
+    ResultadoResetPrimeiroAcesso,
 )
 
 
@@ -139,6 +140,7 @@ class HistoricoDocumentoProvider(Protocol):
 
 
 class UserRegistrationRepository(Protocol):
+    async def delete_account(self, user_id: UUID) -> None: ...
     async def student_exists(self, matricula: str) -> bool: ...
     async def course_exists(self, codigo: str) -> bool: ...
     async def registration_in_use(self, matricula: str) -> bool: ...
@@ -166,6 +168,7 @@ class AuthProvider(Protocol):
 
 
 class AvatarStorageProvider(Protocol):
+    async def delete_user_files(self, *, user_id: UUID, access_token: str) -> None: ...
     async def upload(
         self,
         *,
@@ -198,6 +201,12 @@ class QuestionarioRepository(Protocol):
         valor: int,
     ) -> None: ...
     async def complete(self, *, user_id: UUID, questionario_id: int) -> None: ...
+
+
+class PrimeiroAcessoRepository(Protocol):
+    async def reset_user_progress(
+        self, user_id: UUID
+    ) -> ResultadoResetPrimeiroAcesso: ...
 
 
 class AcademicDataProvider(Protocol):

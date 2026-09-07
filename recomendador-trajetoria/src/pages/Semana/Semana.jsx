@@ -3,6 +3,10 @@ import { useEffect, useState } from 'react'
 import AppHeader from '../../components/AppHeader/AppHeader'
 import BottomNav from '../../components/BottomNav/BottomNav'
 import CargaPlanejada from '../../components/CargaPlanejada/CargaPlanejada'
+import {
+  useFirstAccessGuideAction,
+  useFirstAccessGuideTarget,
+} from '../../components/FirstAccessGuide/FirstAccessGuideContext'
 import PlanItemDialog from '../../components/PlanItemDialog/PlanItemDialog'
 import ScheduleGrid from '../../components/ScheduleGrid/ScheduleGrid'
 import { listNotApprovedDisciplines } from '../../services/academic'
@@ -60,6 +64,9 @@ function durationByType(items, type) {
 }
 
 function Semana() {
+  const planGridGuideRef = useFirstAccessGuideTarget('first-access-plan-grid')
+  const planSaveGuideRef = useFirstAccessGuideTarget('first-access-plan-save')
+  const completeGuideAction = useFirstAccessGuideAction()
   const registration = getStoredAuth()?.perfil?.matricula
   const [selectedType, setSelectedType] = useState('DISCIPLINA')
   const [savedItems, setSavedItems] = useState([])
@@ -126,8 +133,8 @@ function Semana() {
   }
 
   function openNewItem(day, hour) {
-    const start = `${String(hour).padStart(2, '0')}:00`
-    const end = `${String(Math.min(22, hour + 2)).padStart(2, '0')}:00`
+    const start = `${String(Math.floor(hour)).padStart(2, '0')}:30`
+    const end = `${String(Math.floor(hour + 2)).padStart(2, '0')}:30`
     setError('')
     const draft = {
       _key: `new-${Date.now()}-${day}-${hour}`,
@@ -140,6 +147,7 @@ function Semana() {
       observacoes: '',
     }
     setEditorItem(draft)
+    completeGuideAction('open-plan-slot')
     if (selectedType === 'DISCIPLINA') loadDisciplineOptions(draft)
     else {
       setDisciplines([])
@@ -241,6 +249,7 @@ function Semana() {
       setItems(saved)
       setDirty(false)
       setFeedback('Plano semanal salvo com sucesso.')
+      completeGuideAction('save-plan')
     } catch (requestError) {
       setError(requestError.message || 'Não foi possível salvar o plano semanal.')
     } finally {
@@ -256,15 +265,17 @@ function Semana() {
     <main className="mobile-page week-page">
       <AppHeader title="Monte sua semana" icon={RotateCw} onClick={restoreSavedPlan} ariaLabel="Restaurar plano salvo" />
       <div className="week-page__content">
-        <div className="schedule-filters">
-          {activityTypes.map((type) => (
-            <button key={type.value} className={`schedule-filter schedule-filter--${type.tone}${selectedType === type.value ? ' is-active' : ''}`} type="button" onClick={() => setSelectedType(type.value)}>{type.label}</button>
-          ))}
-        </div>
+        <div ref={planGridGuideRef} className="week-page__schedule-builder">
+          <div className="schedule-filters">
+            {activityTypes.map((type) => (
+              <button key={type.value} className={`schedule-filter schedule-filter--${type.tone}${selectedType === type.value ? ' is-active' : ''}`} type="button" onClick={() => setSelectedType(type.value)}>{type.label}</button>
+            ))}
+          </div>
 
-        {loading ? <p className="week-page__loading">Carregando plano...</p> : (
-          <ScheduleGrid entries={items} onSelectSlot={openNewItem} onSelectEntry={openExistingItem} />
-        )}
+          {loading ? <p className="week-page__loading">Carregando plano...</p> : (
+            <ScheduleGrid entries={items} onSelectSlot={openNewItem} onSelectEntry={openExistingItem} />
+          )}
+        </div>
 
         <CargaPlanejada
           horasDisciplinas={disciplineHours}
@@ -275,7 +286,7 @@ function Semana() {
         {feedback && <p className="week-page__feedback is-success" role="status">{feedback}</p>}
         {error && <p className="week-page__feedback is-error" role="alert">{error}</p>}
 
-        <button className="primary-button week-page__save" type="button" disabled={!dirty || saving || loading} onClick={persistPlan}>
+        <button ref={planSaveGuideRef} className="primary-button week-page__save" type="button" disabled={!dirty || saving || loading} onClick={persistPlan}>
           <Save size={15} />{saving ? 'Salvando...' : 'Salvar plano'}
         </button>
       </div>

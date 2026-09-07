@@ -1,5 +1,5 @@
 .schedule-grid {
-  --schedule-time-column: 32px;
+  --schedule-time-column: 38px;
   --schedule-header-height: 28px;
   --schedule-row-height: 44px;
   padding: 12px;
@@ -108,7 +108,7 @@
 
 @media (max-width: 360px) {
   .schedule-grid {
-    --schedule-time-column: 27px;
+    --schedule-time-column: 35px;
     --schedule-header-height: 26px;
     --schedule-row-height: 41px;
     padding: 9px;

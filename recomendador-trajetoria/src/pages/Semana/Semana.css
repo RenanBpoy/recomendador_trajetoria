@@ -1,4 +1,5 @@
 .week-page__content { padding: 8px 30px var(--nav-space); display: flex; flex-direction: column; gap: 18px; }
+.week-page__schedule-builder { display: flex; flex-direction: column; gap: 18px; }
 .schedule-filters { display: flex; align-items: center; gap: 8px; }
 .schedule-filters button { min-height: 31px; padding: 0 14px; border: 1px solid var(--border); border-radius: 18px; color: var(--text); background: var(--surface); font-size: 10px; font-weight: 800; cursor: pointer; }
 .schedule-filter--mint.is-active { color: #173d38; border-color: #8ce0c5; background: #8ce0c5; }

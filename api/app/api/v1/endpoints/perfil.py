@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, File, Request, UploadFile, status
 
 from app.dependencies.auth import CurrentAccessToken, CurrentProfileDep, PerfilServiceDep
@@ -13,6 +15,37 @@ from app.schemas.auth import (
 from app.schemas.common import ApiResponse, ErrorResponse, response_meta
 
 router = APIRouter(prefix="/perfil", tags=["Perfil"])
+
+
+@router.delete(
+    "/conta",
+    response_model=ApiResponse[OperationMessageOut],
+    responses={
+        200: {"content": {"application/json": {"examples": {
+            "conta_excluida": {"value": {
+                "data": {"mensagem": "Conta excluída definitivamente."},
+                "meta": {"request_id": "exemplo-exclusao-conta"},
+            }}
+        }}}},
+        401: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+        503: {"model": ErrorResponse},
+    },
+    summary="Excluir definitivamente a própria conta",
+    description="Exige sessão válida e confirmacao=EXCLUIR. Remove fotos, perfil, históricos enviados, equivalências manuais, questionário e plano. Preserva dados acadêmicos dos diários de classe. Não aceita o ID de outro usuário.",
+)
+async def delete_account(
+    request: Request,
+    profile: CurrentProfileDep,
+    access_token: CurrentAccessToken,
+    service: PerfilServiceDep,
+    confirmacao: Literal["EXCLUIR"],
+) -> ApiResponse[OperationMessageOut]:
+    await service.delete_account(profile=profile, access_token=access_token)
+    return ApiResponse(
+        data=OperationMessageOut(mensagem="Conta excluída definitivamente."),
+        meta=response_meta(request),
+    )
 
 
 @router.get(

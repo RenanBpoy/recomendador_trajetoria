@@ -2,7 +2,7 @@ import { X } from 'lucide-react'
 import { useEffect, useId } from 'react'
 import './ProfileDialog.css'
 
-function ProfileDialog({ title, subtitle, onClose, children, className = '', footer }) {
+function ProfileDialog({ title, subtitle, onClose, children, className = '', footer, dialogRef }) {
   const titleId = useId()
 
   useEffect(() => {
@@ -21,7 +21,7 @@ function ProfileDialog({ title, subtitle, onClose, children, className = '', foo
         if (event.target === event.currentTarget) onClose()
       }}
     >
-      <section className={`profile-dialog ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <section ref={dialogRef} className={`profile-dialog ${className}`.trim()} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <header className="profile-dialog__header">
           <div>
             <h2 id={titleId}>{title}</h2>

@@ -2,6 +2,10 @@ import { ArrowLeft, ArrowRight, Info, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AgreementScale from '../../components/AgreementScale/AgreementScale'
+import {
+  useFirstAccessGuideAction,
+  useFirstAccessGuideTarget,
+} from '../../components/FirstAccessGuide/FirstAccessGuideContext'
 import QuestionnaireHeader from '../../components/QuestionnaireHeader/QuestionnaireHeader'
 import QuestionnaireQuestion from '../../components/QuestionnaireQuestion/QuestionnaireQuestion'
 import QuestionnaireSection from '../../components/QuestionnaireSection/QuestionnaireSection'
@@ -14,6 +18,8 @@ import './Questionario.css'
 
 function Questionario() {
   const navigate = useNavigate()
+  const answerGuideRef = useFirstAccessGuideTarget('first-access-questionnaire-answer')
+  const completeGuideAction = useFirstAccessGuideAction()
   const [questionnaire, setQuestionnaire] = useState(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -57,6 +63,7 @@ function Questionario() {
       const saved = await saveQuestionnaireAnswer(currentQuestion.id, value)
       setQuestionnaire(saved)
       setSaveState('Resposta salva automaticamente')
+      completeGuideAction('answer-questionnaire')
     } catch (requestError) {
       setError(requestError.message || 'Não foi possível salvar a resposta.')
       setSaveState('')
@@ -150,6 +157,7 @@ function Questionario() {
         </QuestionnaireQuestion>
 
         <AgreementScale
+          guideRef={answerGuideRef}
           selectedValue={currentQuestion.resposta}
           onChange={handleAnswer}
           disabled={saving}

@@ -114,6 +114,12 @@ class PerfilService:
         self._auth = auth
         self._avatars = avatars
 
+    async def delete_account(self, *, profile: UserProfile, access_token: str) -> None:
+        # Storage precisa ser limpo enquanto a sessão e as políticas ainda existem.
+        # Se falhar, não apaga a conta; a operação pode ser tentada novamente.
+        await self._avatars.delete_user_files(user_id=profile.id, access_token=access_token)
+        await self._users.delete_account(profile.id)
+
     async def with_avatar_url(
         self, *, profile: UserProfile, access_token: str
     ) -> UserProfile:

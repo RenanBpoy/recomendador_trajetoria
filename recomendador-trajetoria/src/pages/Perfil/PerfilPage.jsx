@@ -7,13 +7,17 @@ import FormField from '../../components/FormField/FormField'
 import MetricStrip from '../../components/MetricStrip/MetricStrip'
 import ProfileAvatar from '../../components/ProfileAvatar/ProfileAvatar'
 import ProfileDialog from '../../components/ProfileDialog/ProfileDialog'
+import ProfileGuide from '../../components/ProfileGuide/ProfileGuide'
 import { useAcademicProgress } from '../../hooks/useAcademicProgress'
 import { useStoredAuth } from '../../hooks/useStoredAuth'
 import { listCourseCurricula } from '../../services/academic'
 import { clearAuthSession } from '../../services/auth'
+import { restartFirstAccessGuide, restartProfileGuide } from '../../services/firstAccessGuide'
 import {
   getCurrentProfile,
+  deleteAccount,
   requestEmailChange,
+  resetFirstAccessProgress,
   saveSelectedCurriculum,
   updatePassword,
   updatePersonalData,
@@ -62,6 +66,9 @@ function PerfilPage() {
   const [personalForm, setPersonalForm] = useState({ nome: '', data_nascimento: '' })
   const [email, setEmail] = useState('')
   const [passwordForm, setPasswordForm] = useState({ senha: '', confirmacao_senha: '' })
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false)
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
   useEffect(() => {
     let active = true
@@ -93,6 +100,9 @@ function PerfilPage() {
     setPanelFeedback('')
     setPanelError('')
     setActivePanel(panel)
+    setShowResetConfirmation(false)
+    setShowDeleteConfirmation(false)
+    setDeleteConfirmation('')
     if (panel === 'personal') {
       setPersonalForm({
         nome: profile?.nome || '',
@@ -197,6 +207,49 @@ function PerfilPage() {
     navigate('/login', { replace: true })
   }
 
+  async function handleDeleteAccount(event) {
+    event.preventDefault()
+    if (busyAction || deleteConfirmation !== 'EXCLUIR') return
+    setBusyAction('delete-account')
+    setPanelError('')
+    try {
+      await deleteAccount()
+      navigate('/login', { replace: true })
+    } catch (requestError) {
+      setPanelError(requestError.message || 'Não foi possível excluir a conta. Tente novamente.')
+    } finally {
+      setBusyAction('')
+    }
+  }
+
+  function handleRestartFirstAccessGuide() {
+    const userId = auth?.usuario?.id || profile?.id
+    if (!userId) return
+    setActivePanel(null)
+    restartFirstAccessGuide(userId)
+    navigate('/home')
+  }
+
+  async function handleResetFirstAccessProgress() {
+    const userId = auth?.usuario?.id || profile?.id
+    if (!userId || busyAction) return
+    setBusyAction('reset-first-access')
+    setPanelError('')
+    setPanelFeedback('')
+    try {
+      await resetFirstAccessProgress()
+      restartFirstAccessGuide(userId)
+      restartProfileGuide(userId)
+      setShowResetConfirmation(false)
+      setActivePanel(null)
+      navigate('/home')
+    } catch (requestError) {
+      setPanelError(requestError.message || 'Não foi possível limpar os dados do primeiro acesso.')
+    } finally {
+      setBusyAction('')
+    }
+  }
+
   const totalDisciplines = summary.approved + summary.pending + summary.failed
   const selectedCurriculum = curricula.find((item) => String(item.id) === String(profile?.ppc_id))
 
@@ -234,7 +287,7 @@ function PerfilPage() {
           <h2>Conta</h2>
           <div>
             {settings.map(({ key, title, subtitle, icon: Icon }) => (
-              <button key={key} type="button" onClick={() => openPanel(key)}>
+              <button key={key} data-profile-guide={key} type="button" onClick={() => openPanel(key)}>
                 <span className="account-settings__icon"><Icon size={15} /></span>
                 <span className="account-settings__copy"><strong>{title}</strong><small>{subtitle}</small></span>
                 <b>›</b>
@@ -246,6 +299,7 @@ function PerfilPage() {
         <button className="danger-button profile-page__logout" type="button" onClick={handleLogout}>Sair da conta</button>
       </div>
       <BottomNav active="perfil" />
+      <ProfileGuide userId={auth?.usuario?.id || profile?.id} />
 
       {activePanel === 'personal' && (
         <ProfileDialog title="Dados pessoais" subtitle="Atualize as informações usadas na sua conta." onClose={() => setActivePanel(null)}>
@@ -326,6 +380,63 @@ function PerfilPage() {
         <ProfileDialog title="Ajuda e suporte" subtitle="Atalhos para as principais ações do recomendador." onClose={() => setActivePanel(null)}>
           <section className="profile-dialog__section profile-help"><h3>Minha grade não reconheceu uma disciplina</h3><p>Abra a grade, envie o histórico escolar e selecione manualmente uma equivalência na disciplina pendente.</p></section>
           <section className="profile-dialog__section profile-help"><h3>O progresso parece incorreto</h3><p>Confira se o PPC selecionado corresponde ao currículo em que você ingressou e se o histórico mais recente foi carregado.</p></section>
+          <section className="profile-dialog__section profile-help">
+            <h3>Guia de primeiro acesso</h3>
+            <p>Reinicie os balões de apresentação para conferir novamente o fluxo inicial do aplicativo.</p>
+            <button className="profile-dialog__submit is-secondary" type="button" onClick={handleRestartFirstAccessGuide}>
+              Rever guia inicial
+            </button>
+            {!showResetConfirmation ? (
+              <button
+                className="profile-dialog__submit is-danger profile-help__reset"
+                type="button"
+                disabled={Boolean(busyAction)}
+                onClick={() => { setShowResetConfirmation(true); setShowDeleteConfirmation(false) }}
+              >
+                Limpar dados e testar do zero
+              </button>
+            ) : (
+              <div className="profile-help__confirmation" role="alert">
+                <strong>Limpar seus dados de preparação?</strong>
+                <p>Serão removidos o histórico enviado, as respostas do questionário e todas as atividades do quadro de horários. Sua conta e seu PPC serão mantidos.</p>
+                <div className="profile-dialog__actions">
+                  <button
+                    className="profile-dialog__submit is-secondary"
+                    type="button"
+                    disabled={busyAction === 'reset-first-access'}
+                    onClick={() => setShowResetConfirmation(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="profile-dialog__submit is-danger"
+                    type="button"
+                    disabled={busyAction === 'reset-first-access'}
+                    onClick={handleResetFirstAccessProgress}
+                  >
+                    {busyAction === 'reset-first-access' ? 'Limpando...' : 'Sim, limpar dados'}
+                  </button>
+                </div>
+              </div>
+            )}
+            {!showDeleteConfirmation ? (
+              <button className="profile-dialog__submit is-danger profile-help__reset" type="button" disabled={Boolean(busyAction)} onClick={() => { setShowDeleteConfirmation(true); setDeleteConfirmation(''); setShowResetConfirmation(false); setPanelError('') }}>
+                Excluir minha conta
+              </button>
+            ) : (
+              <form className="profile-help__confirmation profile-dialog__form" onSubmit={handleDeleteAccount}>
+                <strong>Excluir sua conta definitivamente?</strong>
+                <p>Seu perfil, fotos, histórico enviado, equivalências manuais, questionário e plano serão apagados. Não é possível desfazer.</p>
+                <p>Os registros acadêmicos dos diários de classe serão preservados.</p>
+                <FormField label="Digite EXCLUIR para confirmar" name="confirmacao_exclusao" value={deleteConfirmation} autoComplete="off" required disabled={Boolean(busyAction)} onChange={(event) => setDeleteConfirmation(event.target.value)} />
+                <div className="profile-dialog__actions">
+                  <button className="profile-dialog__submit is-secondary" type="button" disabled={Boolean(busyAction)} onClick={() => setShowDeleteConfirmation(false)}>Cancelar</button>
+                  <button className="profile-dialog__submit is-danger" type="submit" disabled={Boolean(busyAction) || deleteConfirmation !== 'EXCLUIR'}>{busyAction === 'delete-account' ? 'Excluindo...' : 'Excluir definitivamente'}</button>
+                </div>
+              </form>
+            )}
+            {panelError && <p className="profile-dialog__feedback is-error" role="alert">{panelError}</p>}
+          </section>
           <div className="profile-dialog__actions">
             <button className="profile-dialog__submit" type="button" onClick={() => navigate('/grade')}>Abrir grade</button>
             <button className="profile-dialog__submit is-secondary" type="button" onClick={() => navigate('/')}>Ir para o início</button>

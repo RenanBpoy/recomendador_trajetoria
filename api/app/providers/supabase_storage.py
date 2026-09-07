@@ -72,6 +72,37 @@ class SupabaseStorageProvider:
         if response.is_error:
             self._raise_storage_error(response, "remover a foto")
 
+    async def delete_user_files(self, *, user_id: UUID, access_token: str) -> None:
+        """Remove também versões antigas de fotos, somente da pasta do usuário."""
+        previous_paths = None
+        while True:
+            response = await self._request(
+                "POST", f"/object/list/{self._bucket}",
+                access_token=access_token,
+                json={"prefix": str(user_id), "limit": 100, "offset": 0},
+            )
+            if response.is_error:
+                self._raise_storage_error(response, "listar as fotos da conta")
+            try:
+                files = response.json()
+                if not isinstance(files, list):
+                    raise ValueError()
+                paths = []
+                for item in files:
+                    name = item.get("name", "")
+                    if not item.get("id") or not name or "/" in name or name in {".", ".."}:
+                        raise ValueError()
+                    paths.append(f"{user_id}/{name}")
+            except (ValueError, AttributeError, TypeError) as exc:
+                raise DataSourceUnavailableError("Não foi possível verificar as fotos da conta.") from exc
+            if not paths:
+                return
+            if paths == previous_paths:
+                raise DataSourceUnavailableError("Não foi possível remover todas as fotos. Tente novamente.")
+            previous_paths = paths
+            for path in paths:
+                await self.delete(path=path, access_token=access_token)
+
     async def create_signed_url(
         self, *, path: str, access_token: str
     ) -> str:

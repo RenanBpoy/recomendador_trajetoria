@@ -97,8 +97,10 @@ function Grade() {
       const result = await uploadSchoolHistory(file)
       setImportData(result)
       await refreshHistory()
+      return true
     } catch (requestError) {
       setImportError(requestError.message || 'Não foi possível ler o histórico enviado.')
+      return false
     } finally {
       setImportBusy(false)
     }

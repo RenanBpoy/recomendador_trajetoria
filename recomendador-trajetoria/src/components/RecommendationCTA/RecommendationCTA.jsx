@@ -1,8 +1,15 @@
 import { ArrowRight, LockKeyhole, Sparkles } from 'lucide-react'
+import { useFirstAccessGuideAction } from '../FirstAccessGuide/FirstAccessGuideContext'
 import './RecommendationCTA.css'
 
-function RecommendationCTA({ enabled = false, checking = false, onStart }) {
+function RecommendationCTA({ enabled = false, checking = false, onStart, guideRef }) {
+  const completeGuideAction = useFirstAccessGuideAction()
   const buttonLabel = checking ? 'Verificando etapas' : enabled ? 'Começar análise' : 'Complete as etapas'
+
+  function handleStart() {
+    completeGuideAction('start-recommendation')
+    onStart?.()
+  }
 
   return (
     <section className={`recommendation-cta${enabled ? ' is-enabled' : ' is-locked'}`}>
@@ -21,9 +28,10 @@ function RecommendationCTA({ enabled = false, checking = false, onStart }) {
       </div>
 
       <button
+        ref={guideRef}
         className="recommendation-cta__button"
         type="button"
-        onClick={onStart}
+        onClick={handleStart}
         disabled={!enabled || checking}
       >
         <span>{buttonLabel}</span>

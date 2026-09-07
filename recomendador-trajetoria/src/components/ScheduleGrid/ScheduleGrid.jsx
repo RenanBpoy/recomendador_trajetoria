@@ -2,7 +2,7 @@ import { weeklyActivityLabel } from '../../utils/weeklyPlan'
 import './ScheduleGrid.css'
 
 const days = ['SEG', 'TER', 'QUA', 'QUI', 'SEX']
-const hours = [8, 10, 12, 14, 16, 18, 20]
+const hours = [8.5, 10.5, 12.5, 14.5, 16.5, 18.5, 20.5]
 const activityColors = {
   DISCIPLINA: 'mint',
   ESTAGIO: 'purple',
@@ -10,7 +10,8 @@ const activityColors = {
 }
 
 function hourValue(value) {
-  return Number(String(value).slice(0, 2))
+  const [hour, minute] = String(value).split(':').map(Number)
+  return hour + minute / 60
 }
 
 function eventName(entry) {
@@ -24,8 +25,10 @@ function eventLabel(entry) {
 }
 
 function ScheduleGrid({ entries = [], onSelectSlot, onSelectEntry, readOnly = false, footerText, endHour = 20 }) {
-  const visibleHours = hours.filter((hour) => hour <= endHour)
-  const visibleEntries = entries.filter((entry) => hourValue(entry.hora_inicio) <= endHour)
+  const visibleHours = hours.filter((hour) => hour <= endHour + 0.5)
+  const gridStart = hours[0]
+  const gridEnd = visibleHours[visibleHours.length - 1] + 2
+  const visibleEntries = entries.filter((entry) => hourValue(entry.hora_inicio) < gridEnd && hourValue(entry.hora_fim) > gridStart)
 
   return (
     <section className={`schedule-grid${readOnly ? ' is-readonly' : ''}`} aria-label="Grade semanal">
@@ -38,7 +41,7 @@ function ScheduleGrid({ entries = [], onSelectSlot, onSelectEntry, readOnly = fa
 
         {visibleHours.map((hour, index) => (
           <span key={hour} className="weekly-calendar__hour" style={{ gridColumn: 1, gridRow: index + 2 }}>
-            {String(hour).padStart(2, '0')}
+            {Math.floor(hour)}h30
           </span>
         ))}
 
@@ -48,7 +51,7 @@ function ScheduleGrid({ entries = [], onSelectSlot, onSelectEntry, readOnly = fa
             className="weekly-calendar__slot"
             type="button"
             style={{ gridColumn: dayIndex + 2, gridRow: rowIndex + 2 }}
-            aria-label={readOnly ? undefined : `Adicionar atividade na ${days[dayIndex]} às ${hour}:00`}
+            aria-label={readOnly ? undefined : `Adicionar atividade na ${days[dayIndex]} às ${Math.floor(hour)}:30`}
             onClick={() => !readOnly && onSelectSlot?.(dayIndex + 1, hour)}
             disabled={readOnly}
           >
@@ -57,10 +60,13 @@ function ScheduleGrid({ entries = [], onSelectSlot, onSelectEntry, readOnly = fa
         )))}
 
         {visibleEntries.map((entry) => {
-          const start = hourValue(entry.hora_inicio)
-          const end = hourValue(entry.hora_fim)
-          const row = Math.floor((start - 8) / 2) + 2
-          const span = Math.max(1, Math.ceil((end - start) / 2))
+          const start = Math.max(gridStart, hourValue(entry.hora_inicio))
+          const end = Math.min(gridEnd, hourValue(entry.hora_fim))
+          const rowOffset = (start - gridStart) / 2
+          const row = Math.floor(rowOffset) + 2
+          const span = Math.max(1, Math.ceil((end - gridStart) / 2) - Math.floor(rowOffset))
+          const topInset = (rowOffset % 1) / span * 100
+          const bottomInset = (Math.floor(rowOffset) + span - (end - gridStart) / 2) / span * 100
           const color = entry.cor || activityColors[entry.tipo_atividade] || 'blue'
           const name = eventName(entry)
           const hasDisciplineCode = entry.tipo_atividade === 'DISCIPLINA'
@@ -71,8 +77,8 @@ function ScheduleGrid({ entries = [], onSelectSlot, onSelectEntry, readOnly = fa
               key={entry._key}
               type="button"
               className={`weekly-calendar__event weekly-calendar__event--${color}${hasDisciplineCode ? ' weekly-calendar__event--discipline-code' : ''}`}
-              style={{ gridColumn: entry.dia_semana + 1, gridRow: `${row} / span ${span}` }}
-              aria-label={`${name}, ${days[entry.dia_semana - 1]}, às ${String(start).padStart(2, '0')} horas`}
+              style={{ gridColumn: entry.dia_semana + 1, gridRow: `${row} / span ${span}`, alignSelf: 'start', top: `${topInset}%`, height: `calc(${100 - topInset - bottomInset}% - 8px)` }}
+              aria-label={`${name}, ${days[entry.dia_semana - 1]}, das ${String(entry.hora_inicio).slice(0, 5)} às ${String(entry.hora_fim).slice(0, 5)}`}
               title={readOnly ? name : `Editar ${name.toLowerCase()}`}
               onClick={() => !readOnly && onSelectEntry?.(entry)}
               disabled={readOnly}

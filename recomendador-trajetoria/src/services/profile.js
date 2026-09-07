@@ -1,12 +1,13 @@
 import { apiDelete, apiGet, apiPatch, apiPut, apiUpload } from './api'
 import {
   getAccessToken,
+  clearAuthSession,
   getStoredAuth,
   updateStoredProfile,
   updateStoredUser,
 } from './auth'
 import { invalidateAcademicCache } from './academic'
-import { cachedSessionRequest, setSessionCache } from './sessionCache'
+import { cachedSessionRequest, clearSessionCache, setSessionCache } from './sessionCache'
 
 const PROFILE_TTL = 10 * 60 * 1000
 
@@ -62,4 +63,16 @@ export async function uploadAvatar(file) {
 export async function deleteAvatar() {
   const profile = await apiDelete('/perfil/avatar', getAccessToken())
   return syncProfile(profile)
+}
+
+export async function resetFirstAccessProgress() {
+  const result = await apiDelete('/primeiro-acesso/progresso', getAccessToken())
+  clearSessionCache()
+  return result
+}
+
+export async function deleteAccount() {
+  const result = await apiDelete('/perfil/conta?confirmacao=EXCLUIR', getAccessToken())
+  clearAuthSession()
+  return result
 }

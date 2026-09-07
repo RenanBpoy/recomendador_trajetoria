@@ -1,16 +1,25 @@
 import { Check, FileUp, Link2, TriangleAlert, X } from 'lucide-react'
 import { useRef } from 'react'
+import {
+  useFirstAccessGuideAction,
+  useFirstAccessGuideTarget,
+} from '../FirstAccessGuide/FirstAccessGuideContext'
 import './HistoryImportCard.css'
 
 function HistoryImportCard({ importData, busy, error, onUpload, onReview }) {
   const inputRef = useRef(null)
+  const uploadGuideRef = useFirstAccessGuideTarget('first-access-history-upload')
+  const completeGuideAction = useFirstAccessGuideAction()
   const suggestions = importData?.itens?.filter(
     (item) => item.status_correspondencia === 'SUGERIDA' && item.correspondencia_id,
   ) || []
 
   async function handleFile(event) {
     const [file] = event.target.files
-    if (file) await onUpload(file)
+    if (file) {
+      const uploaded = await onUpload(file)
+      if (uploaded) completeGuideAction('history-uploaded')
+    }
     event.target.value = ''
   }
 
@@ -32,6 +41,7 @@ function HistoryImportCard({ importData, busy, error, onUpload, onReview }) {
         onChange={handleFile}
       />
       <button
+        ref={uploadGuideRef}
         className="history-import__upload"
         type="button"
         disabled={busy}

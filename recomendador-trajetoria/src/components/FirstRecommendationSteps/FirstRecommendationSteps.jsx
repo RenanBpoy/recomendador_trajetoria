@@ -1,5 +1,9 @@
 import { ArrowRight, Check, Clock3 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import {
+  useFirstAccessGuideAction,
+  useFirstAccessGuideTarget,
+} from '../FirstAccessGuide/FirstAccessGuideContext'
 import RecommendationCTA from '../RecommendationCTA/RecommendationCTA'
 import './FirstRecommendationSteps.css'
 
@@ -11,7 +15,7 @@ function StepMarker({ number, completed }) {
   )
 }
 
-function CurrentStep({ number, title, description, duration, action, to }) {
+function CurrentStep({ number, title, description, duration, action, to, guideRef, onGuideAction }) {
   const actionContent = <>{action}<ArrowRight size={15} /></>
 
   return (
@@ -23,7 +27,7 @@ function CurrentStep({ number, title, description, duration, action, to }) {
         <p>{description}</p>
         <small className="recommendation-step__duration"><Clock3 size={12} />{duration}</small>
         {to ? (
-          <Link className="recommendation-step__action" to={to}>{actionContent}</Link>
+          <Link ref={guideRef} className="recommendation-step__action" to={to} onClick={onGuideAction}>{actionContent}</Link>
         ) : (
           <button className="recommendation-step__action" type="button" disabled title="Funcionalidade em breve">
             {actionContent}
@@ -43,6 +47,11 @@ function FirstRecommendationSteps({
   checkingWeeklyPlan = false,
   onStartRecommendation,
 }) {
+  const completeGuideAction = useFirstAccessGuideAction()
+  const historyGuideRef = useFirstAccessGuideTarget('first-access-history')
+  const questionnaireGuideRef = useFirstAccessGuideTarget('first-access-questionnaire')
+  const planGuideRef = useFirstAccessGuideTarget('first-access-plan')
+  const recommendationGuideRef = useFirstAccessGuideTarget('first-access-recommendation')
   const completedSteps = Number(historyLoaded) + Number(questionnaireCompleted) + Number(weeklyPlanCompleted)
   const percentage = Math.round((completedSteps / 3) * 100)
   const remainingSteps = 3 - completedSteps
@@ -68,42 +77,56 @@ function FirstRecommendationSteps({
 
       <div className="first-recommendation__list">
         {historyLoaded ? (
-          <article className="recommendation-step recommendation-step--completed">
+          <Link
+            ref={historyGuideRef}
+            className="recommendation-step recommendation-step--completed"
+            to="/grade"
+            onClick={() => completeGuideAction('open-history')}
+          >
             <StepMarker number={1} completed />
             <div className="recommendation-step__content">
               <h3>Histórico acadêmico enviado</h3>
               <p>Seu arquivo já está pronto para análise.</p>
             </div>
             <strong>Concluído</strong>
-          </article>
+          </Link>
         ) : (
           <CurrentStep
+            guideRef={historyGuideRef}
             number={1}
             title="Envie seu histórico acadêmico"
             description="Precisamos dele para identificar as disciplinas concluídas e pendentes."
             duration="Leva cerca de 1 minuto"
             action="Carregar histórico"
             to="/grade"
+            onGuideAction={() => completeGuideAction('open-history')}
           />
         )}
 
         {questionnaireCompleted ? (
-          <article className="recommendation-step recommendation-step--completed">
+          <Link
+            ref={questionnaireGuideRef}
+            className="recommendation-step recommendation-step--completed"
+            to="/questionario"
+            onClick={() => completeGuideAction('open-questionnaire')}
+          >
             <StepMarker number={2} completed />
             <div className="recommendation-step__content">
               <h3>Questionário acadêmico respondido</h3>
               <p>Suas respostas pessoais foram salvas.</p>
             </div>
             <strong>Concluído</strong>
-          </article>
+          </Link>
         ) : historyLoaded ? (
           <CurrentStep
+            guideRef={questionnaireGuideRef}
             number={2}
             title="Conte-nos um pouco sobre você"
             description="Informe seus interesses, objetivos e preferências acadêmicas."
             duration="Leva cerca de 3 minutos"
             action="Preencher questionário"
             to="/questionario"
+            onGuideAction={() => completeGuideAction('open-questionnaire')}
           />
         ) : (
           <article className="recommendation-step recommendation-step--upcoming">
@@ -117,22 +140,29 @@ function FirstRecommendationSteps({
         )}
 
         {weeklyPlanCompleted ? (
-          <article className="recommendation-step recommendation-step--completed">
+          <Link
+            ref={planGuideRef}
+            className="recommendation-step recommendation-step--completed"
+            to="/semana"
+            onClick={() => completeGuideAction('open-plan')}
+          >
             <StepMarker number={3} completed />
             <div className="recommendation-step__content">
               <h3>Disponibilidade definida</h3>
               <p>Seu cronograma semanal foi salvo.</p>
             </div>
             <strong>Concluído</strong>
-          </article>
+          </Link>
         ) : historyLoaded && questionnaireCompleted ? (
           <CurrentStep
+            guideRef={planGuideRef}
             number={3}
             title="Defina sua disponibilidade"
             description="Escolha os dias, horários e a carga horária desejada."
             duration="Leva cerca de 2 minutos"
             action="Preencher cronograma"
             to="/semana"
+            onGuideAction={() => completeGuideAction('open-plan')}
           />
         ) : (
           <article className="recommendation-step recommendation-step--upcoming">
@@ -147,6 +177,7 @@ function FirstRecommendationSteps({
       </div>
 
       <RecommendationCTA
+        guideRef={recommendationGuideRef}
         enabled={!checking && completedSteps === 3}
         checking={checking}
         onStart={onStartRecommendation}

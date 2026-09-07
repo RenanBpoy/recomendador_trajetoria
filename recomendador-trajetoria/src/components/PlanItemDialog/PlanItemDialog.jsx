@@ -1,6 +1,10 @@
 import { useId, useMemo, useState } from 'react'
 import { weeklyActivityLabel } from '../../utils/weeklyPlan'
 import DisciplinePlanPicker from '../DisciplinePlanPicker/DisciplinePlanPicker'
+import {
+  useFirstAccessGuideAction,
+  useFirstAccessGuideTarget,
+} from '../FirstAccessGuide/FirstAccessGuideContext'
 import ProfileDialog from '../ProfileDialog/ProfileDialog'
 import './PlanItemDialog.css'
 
@@ -48,6 +52,8 @@ function PlanItemDialog({
   onSave,
   onDelete,
 }) {
+  const dialogGuideRef = useFirstAccessGuideTarget('first-access-plan-dialog')
+  const completeGuideAction = useFirstAccessGuideAction()
   const [form, setForm] = useState(item)
   const [submitError, setSubmitError] = useState('')
   const formId = useId()
@@ -106,6 +112,7 @@ function PlanItemDialog({
       setSubmitError('Já existe outra atividade nesse período. Ajuste o horário ou selecione outro dia na grade.')
       return
     }
+    completeGuideAction('add-plan-item')
     onClose()
   }
 
@@ -124,6 +131,7 @@ function PlanItemDialog({
       onClose={onClose}
       className="plan-item-dialog"
       footer={actions}
+      dialogRef={dialogGuideRef}
     >
       <form id={formId} className="plan-item-form" onSubmit={submit}>
         {form.tipo_atividade === 'DISCIPLINA' && (
