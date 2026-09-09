@@ -1,0 +1,20 @@
+.consulta-resumo p, .consulta-resumo summary { font-size: 11px; line-height: 1.6; color: var(--muted); }
+.consulta-resumo summary { cursor: pointer; color: var(--cyan); padding: 8px 0; }
+.consulta-resumo .metric-strip__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.consulta-resumo .metric-strip__item strong { font-size: 23px; }
+.consulta-select { display: grid; gap: 8px; font-size: 12px; color: var(--muted); }
+.consulta-select select { min-height: 44px; border: 1px solid var(--border); border-radius: 12px; padding: 10px; color: var(--text); background: var(--surface); }
+.consulta-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.consulta-facts div { padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.consulta-facts dt { font-size: 10px; color: var(--muted); }
+.consulta-facts dd { margin: 6px 0 0; font-size: 12px; overflow-wrap: anywhere; }
+.consulta-section { display: grid; gap: 12px; }
+.consulta-section p { font-size: 12px; line-height: 1.6; }
+.consulta-section ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.consulta-section a { color: var(--cyan); font-size: 12px; }
+.consulta-table { max-width: 100%; overflow: auto; border: 1px solid var(--border); border-radius: 12px; }
+.consulta-table table { width: 100%; min-width: 750px; border-collapse: collapse; text-align: left; font-size: 11px; }
+.consulta-table caption { text-align: left; padding: 12px; color: var(--muted); }
+.consulta-table th, .consulta-table td { padding: 12px; border-bottom: 1px solid var(--border); }
+.consulta-table thead { background: var(--surface); }
+.consulta-table tbody th { min-width: 150px; font-weight: 600; }

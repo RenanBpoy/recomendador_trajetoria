@@ -1,4 +1,5 @@
 import { weeklyActivityLabel } from '../../utils/weeklyPlan'
+import SalomaoBanquet from './SalomaoBanquet'
 import './ScheduleGrid.css'
 
 const days = ['SEG', 'TER', 'QUA', 'QUI', 'SEX']
@@ -44,6 +45,8 @@ function ScheduleGrid({ entries = [], onSelectSlot, onSelectEntry, readOnly = fa
             {Math.floor(hour)}h30
           </span>
         ))}
+
+        {visibleHours.includes(12.5) && <SalomaoBanquet row={visibleHours.indexOf(12.5) + 2} />}
 
         {days.flatMap((_, dayIndex) => visibleHours.map((hour, rowIndex) => (
           <button

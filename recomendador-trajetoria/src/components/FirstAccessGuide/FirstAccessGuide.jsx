@@ -5,11 +5,25 @@ import presentingMascot from '../../assets/img/presenting.png'
 import thinkingMascot from '../../assets/img/thinking.png'
 import uploadMascot from '../../assets/img/upload.png'
 import verifiedMascot from '../../assets/img/verified.png'
+import readingMascot from '../../assets/img/reading.png'
+
+import wavingMascot from '../../assets/img/salomao-waving.png'
+import happyMascot from '../../assets/img/salomao-happy.png'
+import heartMascot from '../../assets/img/salomao-heart.png'
+import sleepingMascot from '../../assets/img/salomao-sleeping.png'
+import surprisedMascot from '../../assets/img/salomao-surprised.png'
+import lookingBackMascot from '../../assets/img/salomao-looking-back.png'
+import celebratingMascot from '../../assets/img/salomao-celebrating.png'
+import ponderingMascot from '../../assets/img/salomao-pondering.png'
+import coffeeMascot from '../../assets/img/salomao-coffee.png'
+
 import MinimizedGuide from './MinimizedGuide'
+import SalomaoPanel from '../SalomaoPanel/SalomaoPanel'
 import { getActiveHistoryImport } from '../../services/academic'
 import { getCurrentQuestionnaire } from '../../services/questionnaire'
 import { getWeeklyPlan } from '../../services/plan'
 import { AUTH_CHANGED_EVENT, getStoredAuth } from '../../services/auth'
+import { useStoredAuth } from '../../hooks/useStoredAuth'
 import {
   FIRST_ACCESS_GUIDE_CHANGED_EVENT,
   completeFirstAccessGuide,
@@ -19,14 +33,32 @@ import BalaoMascote from '../BalaoMascote/BalaoMascote'
 import { FirstAccessGuideContext } from './FirstAccessGuideContext'
 import './FirstAccessGuide.css'
 
+const mascotes = {
+  lendo: readingMascot,
+  calendario: calendarMascot,
+  apresentando: presentingMascot,
+  pensando: thinkingMascot,
+  enviandoHistorico: uploadMascot,
+  confirmado: verifiedMascot,
+  acenando: wavingMascot,
+  contente: happyMascot,
+  coracao: heartMascot,
+  dormindo: sleepingMascot,
+  surpreso: surprisedMascot,
+  deCostas: lookingBackMascot,
+  comemorando: celebratingMascot,
+  refletindo: ponderingMascot,
+  cafe: coffeeMascot,
+}
+
 const steps = [
   {
     route: '/home',
     standalone: true,
     manualAdvance: true,
     dimPage: false,
-    imageSrc: presentingMascot,
-    text: 'Bem-vindo, estudante! Eu sou o Salomão, o grande sábio, e vou te acompanhar por aqui.',
+    imageSrc: mascotes.apresentando,
+    text: (name) => `Boas-vindas, ${name}! Eu sou o Salomão, o grande sábio, e vou te acompanhar por aqui.`,
     nextLabel: 'Vamos lá!',
   },
   {
@@ -34,7 +66,7 @@ const steps = [
     standalone: true,
     manualAdvance: true,
     dimPage: false,
-    imageSrc: presentingMascot,
+    imageSrc: mascotes.apresentando,
     text: 'Vamos conhecer sua trajetória, entender melhor seu perfil acadêmico e organizar sua semana para preparar sua primeira recomendação.',
     nextLabel: 'Vamos lá!',
   },
@@ -44,8 +76,8 @@ const steps = [
     manualAdvance: true,
     dimPage: false,
     showResumePreview: true,
-    imageSrc: presentingMascot,
-    text: 'Quer fazer uma pausa? Feche o balão no X. Ficarei no canto da tela; toque em mim para continuar de onde parou.',
+    imageSrc: mascotes.lendo,
+    text: 'Caso queira explorar por conta própria, ficarei lendo aqui pertinho, é só me chamar para continuar de onde parou.',
     nextLabel: 'Continuar',
   },
   {
@@ -54,7 +86,7 @@ const steps = [
     manualAdvance: true,
     dimPage: false,
     showResumePreview: true,
-    imageSrc: presentingMascot,
+    imageSrc: mascotes.dormindo,
     text: 'Se eu estiver no caminho, é só me segurar e arrastar para outro canto da tela.',
     nextLabel: 'Continuar',
   },
@@ -63,7 +95,7 @@ const steps = [
     targetId: 'first-access-history',
     actionId: 'open-history',
     route: '/home',
-    imageSrc: presentingMascot,
+    imageSrc: mascotes.cafe,
     placement: 'top',
     text: 'Seu histórico mostra o caminho que você já percorreu no curso. Toque em “Carregar histórico” para começarmos por ele.',
   },
@@ -73,7 +105,7 @@ const steps = [
     standalone: true,
     manualAdvance: true,
     dimPage: false,
-    imageSrc: presentingMascot,
+    imageSrc: mascotes.apresentando,
     text: 'Esta é a sua grade curricular. Aqui você pode acompanhar o caminho que já percorreu e descobrir o que ainda falta pela frente.',
     nextLabel: 'Carregar meu histórico',
   },
@@ -82,7 +114,7 @@ const steps = [
     targetId: 'first-access-history-upload',
     actionId: 'history-uploaded',
     route: '/grade',
-    imageSrc: uploadMascot,
+    imageSrc: mascotes.enviandoHistorico,
     placement: 'top',
     text: 'Envie seu histórico em PDF para atualizar a situação das disciplinas. Depois, você poderá explorar a grade com calma.',
   },
@@ -92,7 +124,7 @@ const steps = [
     actionId: 'return-home-after-history',
     route: '/grade',
     dimPage: false,
-    imageSrc: verifiedMascot,
+    imageSrc: mascotes.comemorando,
     placement: 'top',
     text: 'Histórico processado! Dê uma olhada nos semestres e confira como ficou sua trajetória. Quando quiser continuar, toque em “Início”.',
   },
@@ -101,9 +133,9 @@ const steps = [
     targetId: 'first-access-questionnaire',
     actionId: 'open-questionnaire',
     route: '/home',
-    imageSrc: thinkingMascot,
+    imageSrc: mascotes.pensando,
     placement: 'top',
-    text: 'Agora quero conhecer um pouco melhor sua rotina de estudos. Toque aqui para abrir o questionário..',
+    text: 'Agora quero conhecer um pouco melhor sua rotina de estudos. Toque aqui para abrir o questionário.',
   },
 
   {
@@ -111,28 +143,47 @@ const steps = [
     standalone: true,
     manualAdvance: true,
     dimPage: false,
-    imageSrc: thinkingMascot,
-    text: 'As perguntas tratam de rotina, aprendizagem e autonomia. Responda de acordo com a sua experiência; aqui não existem respostas certas ou erradas.',
+    imageSrc: mascotes.pensando,
+    text: 'As perguntas tratam de rotina, aprendizagem e autonomia. Responda de acordo com a sua experiência.',
     nextLabel: 'Responder',
   },
+  {
+    route: '/questionario',
+    standalone: true,
+    manualAdvance: true,
+    dimPage: false,
+    imageSrc: mascotes.acenando,
+    text: 'Aqui não existem respostas certas ou erradas!',
+    nextLabel: 'Responder',
+  },
+
 
   {
     targetId: 'first-access-questionnaire-answer',
     actionId: 'answer-questionnaire',
     route: '/questionario',
     navigateAfterAction: false,
-    imageSrc: thinkingMascot,
+    imageSrc: mascotes.pensando,
     placement: 'bottom',
     text: 'Escolha de 1 a 10 o quanto você concorda com a afirmação. Depois, continue respondendo às próximas perguntas.',
   },
 
   {
+    route: '/home',
+    standalone: true,
+    manualAdvance: true,
+    dimPage: false,
+    imageSrc: mascotes.calendario,
+    text: 'Perfeito! Agora quero conhecer um pouco da sua semana.',
+    nextLabel: 'Continuar',
+  },
+  {
     targetId: 'first-access-plan',
     actionId: 'open-plan',
     route: '/home',
-    imageSrc: calendarMascot,
+    imageSrc: mascotes.calendario,
     placement: 'top',
-    text: 'Agora quero conhecer um pouco da sua semana. No Plano, você pode me mostrar seus compromissos e horários ocupados para que eu considere tudo isso nas recomendações.',
+    text: 'No Plano, você pode me mostrar seus compromissos e horários ocupados para que eu considere tudo isso nas recomendações.',
   },
 
   {
@@ -140,8 +191,17 @@ const steps = [
     standalone: true,
     manualAdvance: true,
     dimPage: false,
-    imageSrc: calendarMascot,
-    text: 'Aqui você organiza aulas, estágio e outros compromissos da semana. Só não vale ocupar das 12h30 às 13h30 — esse é o horário do meu banquete!',
+    imageSrc: mascotes.calendario,
+    text: 'Aqui você organiza aulas, estágio e outros compromissos da semana.',
+    nextLabel: 'Montar minha semana',
+  },
+  {
+    route: '/semana',
+    standalone: true,
+    manualAdvance: true,
+    dimPage: false,
+    imageSrc: mascotes.cafe,
+    text: 'Só não vale ocupar das 12h30 às 13h30 — esse é o horário do meu banquete!',
     nextLabel: 'Montar minha semana',
   },
 
@@ -149,7 +209,7 @@ const steps = [
     targetId: 'first-access-plan-grid',
     actionId: 'open-plan-slot',
     route: '/semana',
-    imageSrc: calendarMascot,
+    imageSrc: mascotes.calendario,
     placement: 'top',
     text: 'Escolha o tipo de atividade e toque em um horário livre da grade. Assim, vamos encaixar esse compromisso na sua semana.',
   },
@@ -158,7 +218,7 @@ const steps = [
     targetId: 'first-access-plan-dialog',
     actionId: 'add-plan-item',
     route: '/semana',
-    imageSrc: calendarMascot,
+    imageSrc: mascotes.calendario,
     placement: 'top',
     text: 'Conte um pouco mais sobre essa atividade e confirme para adicioná-la à sua semana.',
   },
@@ -168,18 +228,27 @@ const steps = [
     actionId: 'save-plan',
     route: '/semana',
     dimPage: false,
-    imageSrc: verifiedMascot,
+    imageSrc: mascotes.confirmado,
     placement: 'top',
     text: 'Pronto, compromisso adicionado! Agora toque em “Salvar plano” para eu lembrar desses horários na hora de preparar sua recomendação.',
   },
 
   {
+    route: '/home',
+    standalone: true,
+    manualAdvance: true,
+    dimPage: false,
+    imageSrc: mascotes.confirmado,
+    text: 'Tudo pronto! Já conheço sua trajetória, seu perfil e sua semana.',
+    nextLabel: 'Continuar',
+  },
+  {
     targetId: 'first-access-recommendation',
     actionId: 'start-recommendation',
     route: '/home',
-    imageSrc: verifiedMascot,
+    imageSrc: mascotes.confirmado,
     placement: 'top',
-    text: 'Tudo pronto! Já conheço sua trajetória, seu perfil e sua semana. Agora é hora de colocar meus bigodes para pensar: toque em “Começar análise” para montarmos sua primeira recomendação.',
+    text: 'Agora é hora de colocar meus bigodes para pensar: toque em “Começar análise” para montarmos sua primeira recomendação.',
   },
 
   {
@@ -187,8 +256,17 @@ const steps = [
     standalone: true,
     manualAdvance: true,
     dimPage: false,
-    imageSrc: verifiedMascot,
-    text: 'Aqui está a sua recomendação! Confira o cronograma e veja por que cada disciplina foi escolhida. Se gostar da proposta, toque em “Aplicar plano” para levá-la ao seu Plano semanal.',
+    imageSrc: mascotes.comemorando,
+    text: 'Aqui está a sua recomendação! Confira o cronograma e veja por que cada disciplina foi escolhida.',
+    nextLabel: 'Entendi!',
+  },
+  {
+    route: '/recomendacao',
+    standalone: true,
+    manualAdvance: true,
+    dimPage: false,
+    imageSrc: mascotes.calendario,
+    text: 'Se gostar da proposta, toque em “Aplicar plano” para levá-la ao seu Plano semanal.',
     nextLabel: 'Entendi!',
   },
   {
@@ -197,9 +275,19 @@ const steps = [
     manualAdvance: true,
     dimPage: false,
     showResumePreview: true,
-    imageSrc: presentingMascot,
-    text: 'Pronto! Continuarei aqui no cantinho. Afinal, uma jornada de mil disciplinas começa com uma boa escolha... ou algo assim. Se precisar de sabedoria felina, é só chamar o Salomão!',
-    nextLabel: 'Concluir guia',
+    imageSrc: mascotes.refletindo,
+    text: 'Pronto! Uma jornada de mil disciplinas começa com uma boa escolha... ou algo assim.',
+    nextLabel: 'Continuar',
+  },
+  {
+    route: '/recomendacao',
+    standalone: true,
+    manualAdvance: true,
+    dimPage: false,
+    showResumePreview: true,
+    imageSrc: mascotes.deCostas,
+    text: 'Se precisar de sabedoria felina, é só chamar o Salomão!',
+    nextLabel: 'Finalizar',
   },
 ];
 
@@ -210,6 +298,8 @@ function currentUserId() {
 }
 
 export function FirstAccessGuideProvider({ children }) {
+  const auth = useStoredAuth()
+  const firstName = auth?.perfil?.nome?.trim().split(/\s+/)[0] || 'estudante'
   const navigate = useNavigate()
   const location = useLocation()
   const [userId, setUserId] = useState(currentUserId)
@@ -221,6 +311,7 @@ export function FirstAccessGuideProvider({ children }) {
   const [minimized, setMinimized] = useState(false)
   const [checking, setChecking] = useState(false)
   const [resumeError, setResumeError] = useState('')
+  const [assistantPanel, setAssistantPanel] = useState(null)
   const [targets, setTargets] = useState({})
   const targetRefCallbacks = useRef(new Map())
   const activeStep = steps[stepIndex]
@@ -249,6 +340,7 @@ export function FirstAccessGuideProvider({ children }) {
       setUserId(nextUserId)
       if (nextUserId === userId) return
       setMinimized(false)
+      setAssistantPanel(null)
       setStepIndex(0)
       setOpen(Boolean(nextUserId) && shouldShowFirstAccessGuide(nextUserId))
     }
@@ -383,7 +475,7 @@ export function FirstAccessGuideProvider({ children }) {
         standalone={activeStep?.standalone}
         placement={activeStep?.placement}
         imageSrc={activeStep?.imageSrc}
-        text={activeStep?.text}
+        text={typeof activeStep?.text === 'function' ? activeStep.text(firstName) : activeStep?.text}
         nextLabel={activeStep?.nextLabel}
         onNext={activeStep?.manualAdvance ? advanceGuideStep : undefined}
         onClose={() => setMinimized(true)}
@@ -391,12 +483,13 @@ export function FirstAccessGuideProvider({ children }) {
       />
       {(!open || minimized || (activeStep?.showResumePreview && location.pathname === activeStep.route)) && userId && !['/login', '/cadastro', '/'].includes(location.pathname) && (
         <MinimizedGuide
-          onResume={open && minimized ? resumeGuide : undefined}
+          onResume={open && minimized ? resumeGuide : !open ? (target) => setAssistantPanel((current) => current?.routeKey === location.key ? null : { target, routeKey: location.key, userId }) : undefined}
           checking={open && checking}
           error={open ? resumeError : ''}
-          label={open ? 'Retomar guia. Segure e arraste para mover.' : 'Salomão. Segure e arraste para mover.'}
+          label={open ? 'Retomar guia. Segure e arraste para mover.' : 'Abrir atalhos do Salomão. Segure e arraste para mover.'}
         />
       )}
+      <SalomaoPanel target={assistantPanel?.target} open={Boolean(assistantPanel && !open && userId && assistantPanel.userId === userId && assistantPanel.routeKey === location.key)} onClose={() => setAssistantPanel(null)} userId={userId} />
     </FirstAccessGuideContext.Provider>
   )
 }

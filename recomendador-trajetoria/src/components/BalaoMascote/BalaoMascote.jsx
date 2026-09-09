@@ -28,7 +28,12 @@ function BalaoMascote({
   onNext,
   onClose,
   closeLabel = 'Fechar tutorial',
+  showCloseButton = true,
   nextLabel = 'Próximo passo',
+  children,
+  className = '',
+  dialogLabel = 'Guia de primeiro acesso',
+  focusOnOpen = false,
 }) {
   const [arrowElement, setArrowElement] = useState(null)
   const descriptionId = useId()
@@ -66,19 +71,19 @@ function BalaoMascote({
       <FloatingFocusManager
         context={context}
         modal={false}
-        initialFocus={-1}
-        returnFocus={false}
+        initialFocus={focusOnOpen ? 0 : -1}
+        returnFocus={focusOnOpen}
         closeOnFocusOut={false}
       >
         <section
           ref={setFloating}
           {...getFloatingProps({
-            className: `mascot-tip${standalone ? ' mascot-tip--standalone' : ''}`,
+            className: `mascot-tip${standalone ? ' mascot-tip--standalone' : ''} ${className}`,
             style: {
               ...(standalone ? {} : floatingStyles),
               visibility: invisible ? 'hidden' : 'visible',
             },
-            'aria-label': 'Guia de primeiro acesso',
+            'aria-label': dialogLabel,
             'aria-describedby': descriptionId,
           })}
         >
@@ -89,7 +94,7 @@ function BalaoMascote({
               width={30}
               height={15}
               tipRadius={2}
-              fill="white"
+              fill="var(--mascot-tip-background, white)"
             />
           )}
 
@@ -98,18 +103,19 @@ function BalaoMascote({
               <p id={descriptionId} className="mascot-tip__text" aria-live="polite" aria-atomic="true">
                 {text}
               </p>
-              <div className="mascot-tip__controls">
+              {children}
+              {(onNext || (onClose && showCloseButton)) && <div className="mascot-tip__controls">
                 {onNext && (
                   <button type="button" className="mascot-tip__next" aria-label={nextLabel} onClick={onNext}>
                     Continuar
                   </button>
                 )}
-                {onClose && (
+                {onClose && showCloseButton && (
                   <button type="button" className="mascot-tip__close" aria-label={closeLabel} onClick={onClose}>
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
                   </button>
                 )}
-              </div>
+              </div>}
             </div>
 
             {imageSrc && (

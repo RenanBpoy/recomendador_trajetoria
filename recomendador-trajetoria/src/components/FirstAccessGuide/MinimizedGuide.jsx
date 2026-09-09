@@ -43,9 +43,9 @@ export default function MinimizedGuide({ onResume, checking, error, label = 'Ret
         onPointerUp={() => { drag.current = null }}
         onPointerCancel={() => { drag.current = null; suppressClick.current = true }}
         onLostPointerCapture={() => { drag.current = null }}
-        onClick={() => {
+        onClick={(event) => {
           if (suppressClick.current) { suppressClick.current = false; return }
-          if (!checking) onResume?.()
+          if (!checking) onResume?.(event.currentTarget)
         }}
       >
         <img src={readingMascot} alt="" draggable={false} />

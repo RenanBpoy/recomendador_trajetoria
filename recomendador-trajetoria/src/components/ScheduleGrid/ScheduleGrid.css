@@ -71,6 +71,27 @@
 
 .weekly-calendar__slot span { font-size: 17px; }
 
+.weekly-calendar__banquet {
+  position: relative;
+  z-index: 0;
+  align-self: start;
+  height: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-top: 1px dashed var(--yellow);
+  border-bottom: 1px dashed var(--yellow);
+  background: rgba(253, 189, 35, .12);
+  color: var(--yellow);
+  font-size: 9px;
+  font-weight: 650;
+  line-height: 1.2;
+  pointer-events: none;
+}
+.weekly-calendar__banquet small { font-size: 8px; font-weight: 400; margin-left: 4px; }
+.weekly-calendar__banquet svg { flex-shrink: 0; }
+
 .weekly-calendar__event {
   min-width: 0;
   margin: 4px;

@@ -1,0 +1,15 @@
+.mascot-tip.salomao-panel { --mascot-tip-background: var(--surface); --tip-navy: var(--text); width: min(320px, calc(100vw - 40px)); padding: 16px; background: var(--surface); border: 1px solid var(--border); }
+.salomao-panel .mascot-tip__text { margin-bottom: 12px; }
+.salomao-panel__shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-height: min(46dvh, 300px); overflow-y: auto; padding: 3px; }
+.salomao-panel__shortcuts > * { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 9px 3px; min-height: 76px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-soft); color: var(--text); text-align: center; }
+.salomao-panel__shortcuts span { font-size: 10px; font-weight: 650; line-height: 1.3; }
+.salomao-panel__shortcuts small { display: none; }
+.salomao-panel__shortcuts svg { width: 19px !important; height: 19px !important; color: var(--shortcut-color, var(--cyan)); stroke-width: 2 !important; }
+.salomao-panel__shortcuts > a:hover { background: var(--surface-strong); border-color: var(--shortcut-color, var(--cyan)); }
+.salomao-panel__shortcuts > button:disabled { opacity: .6; cursor: not-allowed; }
+.salomao-shortcut--theme { --shortcut-color: var(--yellow); }
+.salomao-shortcut--teachers { --shortcut-color: var(--blue); }
+.salomao-shortcut--disciplines { --shortcut-color: var(--green); }
+.salomao-shortcut--diaries { --shortcut-color: var(--pink); }
+.salomao-shortcut--profile { --shortcut-color: var(--cyan); }
+.salomao-shortcut--analyzed { --shortcut-color: var(--yellow); }
