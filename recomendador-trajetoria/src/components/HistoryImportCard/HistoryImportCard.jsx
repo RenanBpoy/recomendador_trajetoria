@@ -28,8 +28,8 @@ function HistoryImportCard({ importData, busy, error, onUpload, onReview }) {
       <div className="history-import__intro">
         <span className="history-import__icon"><FileUp size={19} /></span>
         <div>
-          <h2 id="history-import-title">Encontrou alguma inconsistência?</h2>
-          <p>Carregue seu histórico para reconhecer disciplinas feitas com outro código.</p>
+          <h2 id="history-import-title">O Salomão deixou passar alguma disciplina?</h2>
+          <p>Carregue seu histórico para ajudar o Salomão a reconhecer disciplinas feitas com outros códigos.</p>
         </div>
       </div>
 

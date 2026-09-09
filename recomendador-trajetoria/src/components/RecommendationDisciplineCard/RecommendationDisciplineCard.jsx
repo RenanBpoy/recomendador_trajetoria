@@ -50,7 +50,7 @@ function RecommendationDisciplineCard({ discipline }) {
       <div className="recommendation-discipline__justification">
         <Sparkles size={13} aria-hidden="true" />
         <div>
-          <strong>Por que a disciplina foi recomendada?</strong>
+          <strong>Por que o Salomão recomendou esta disciplina?</strong>
           <p>{discipline.justificativa}</p>
         </div>
       </div>

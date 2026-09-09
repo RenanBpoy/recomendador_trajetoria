@@ -90,14 +90,14 @@ function Recomendacao() {
 
   return (
     <main className="mobile-page recommendation-page">
-      <AppHeader title="Análise do semestre" icon={ArrowLeft} to="/home" ariaLabel="Voltar para o início" />
+      <AppHeader title="Recomendação do Salomão" icon={ArrowLeft} to="/home" ariaLabel="Voltar para o início" />
 
       <div className="recommendation-page__content">
         {loading && (
           <section className="recommendation-state" aria-live="polite">
             <RefreshCw className="recommendation-state__spinner" size={22} />
             <strong>Analisando sua trajetória...</strong>
-            <p>Estamos combinando PPC, histórico, horários, plano e questionário.</p>
+            <p>O Salomão está analisando seu PPC, histórico, desempenho e horários.</p>
           </section>
         )}
 

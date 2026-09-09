@@ -63,11 +63,11 @@ function FirstRecommendationSteps({
         <span>PRIMEIRO ACESSO</span>
         <small>{checking ? 'Verificando...' : `${completedSteps} de 3 etapas`}</small>
       </div>
-      <h2 id="first-recommendation-title">Complete seu perfil acadêmico</h2>
+      <h2 id="first-recommendation-title">Ajude o Salomão a conhecer você</h2>
       <p className="first-recommendation__intro">
         {remainingSteps === 0
-          ? 'Seu perfil acadêmico está pronto para gerar sua primeira recomendação.'
-          : `Faltam ${remainingSteps === 1 ? 'apenas 1 etapa' : `apenas ${remainingSteps} etapas`} para gerar sua primeira recomendação.`}
+          ? 'O Salomão já pode preparar sua primeira recomendação.'
+          : `Faltam ${remainingSteps === 1 ? 'apenas 1 etapa' : `apenas ${remainingSteps} etapas`} para o Salomão preparar sua primeira recomendação.`}
       </p>
 
       <div className="first-recommendation__progress" aria-label={`${percentage}% concluído`}>

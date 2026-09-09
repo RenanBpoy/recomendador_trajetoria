@@ -455,8 +455,8 @@ class RecomendacaoService:
             )
 
         message = (
-            f"Foram selecionadas {len(selected)} disciplinas para o "
-            f"{context.semestre_curricular}º semestre"
+            f"Escolhi {len(selected)} disciplinas para compor sua próxima etapa, "
+            f"considerando o {context.semestre_curricular}º semestre curricular"
         )
         if delayed_count:
             message += f", incluindo {delayed_count} pendência(s) anterior(es)"
@@ -465,7 +465,7 @@ class RecomendacaoService:
         message += "."
 
         return RecomendacaoAtual(
-            titulo="Um semestre equilibrado para você",
+            titulo="O Salomão preparou este semestre para você",
             mensagem=message,
             contexto=context,
             carga_horaria_total=total_hours,

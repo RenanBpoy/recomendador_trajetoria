@@ -8,7 +8,7 @@ export default function SalomaoPanel({ target, open, onClose, userId }) {
   const recommendationAvailable = hasGeneratedRecommendation(userId)
 
   return (
-    <BalaoMascote target={target} open={open} onClose={onClose} showCloseButton={false} text="Me diga onde vamos. Meus bigodes apontam o caminho!" dialogLabel="Atalhos do Salomão" className="salomao-panel" focusOnOpen>
+    <BalaoMascote target={target} open={open} onClose={onClose} showCloseButton={false} text="O que você gostaria de explorar? Meus bigodes apontam o caminho!" dialogLabel="Atalhos do Salomão" className="salomao-panel" focusOnOpen>
       <div className="salomao-panel__shortcuts">
         <button className="salomao-shortcut--theme" type="button" disabled title="Mudar tema — em breve" aria-label="Mudar tema, em breve">
           <MoonStar size={24} aria-hidden="true" /><span>Tema</span><small>Em breve</small>

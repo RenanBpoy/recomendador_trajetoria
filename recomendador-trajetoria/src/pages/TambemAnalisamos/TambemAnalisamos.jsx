@@ -44,9 +44,9 @@ export default function TambemAnalisamos() {
       <AppHeader title="Também analisamos" icon={ArrowLeft} to="/recomendacao" ariaLabel="Voltar para a recomendação" />
       <div className="also-analyzed-page__content">
         <section className="also-analyzed-intro">
-          <span>POR TRÁS DA RECOMENDAÇÃO</span>
-          <h2>O que ficou fora do plano</h2>
-          <p>Estas disciplinas foram consideradas, mas algum critério impediu que entrassem na combinação atual.</p>
+          <span>OUTRAS POSSIBILIDADES ANALISADAS</span>
+          <h2>O Salomão também analisou estas disciplinas</h2>
+          <p>O Salomão também considerou estas disciplinas, mas encontrou motivos para não incluí-las na recomendação atual.</p>
         </section>
 
         {state.error && (
@@ -62,8 +62,8 @@ export default function TambemAnalisamos() {
         {state.data && !items.length && (
           <section className="also-analyzed-state also-analyzed-state--success">
             <ListCheckIcon />
-            <strong>Nenhuma disciplina ficou de fora</strong>
-            <p>A combinação atual acomodou todas as candidatas analisadas.</p>
+            <strong>O Salomão conseguiu encaixar todas as opções</strong>
+            <p>Todas as disciplinas consideradas adequadas entraram nesta recomendação.</p>
           </section>
         )}
 
