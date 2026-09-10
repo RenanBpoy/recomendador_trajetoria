@@ -191,6 +191,7 @@ class PlanoSemanalRepository(Protocol):
 
 
 class QuestionarioRepository(Protocol):
+    async def save_complete(self, *, user_id: UUID, questionario_id: int, respostas: dict[int, int]) -> None: ...
     async def get_active(self, user_id: UUID) -> QuestionarioAtual | None: ...
     async def save_answer(
         self,

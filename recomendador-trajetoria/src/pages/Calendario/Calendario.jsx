@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import AppHeader from '../../components/AppHeader/AppHeader'
 import BottomNav from '../../components/BottomNav/BottomNav'
 import DailyEvent from '../../components/DailyEvent/DailyEvent'
@@ -10,7 +10,7 @@ const days = Array.from({ length: 31 }, (_, index) => index + 1)
 function Calendario() {
   return (
     <main className="mobile-page calendar-page">
-      <AppHeader title="Calendário" icon={Plus} ariaLabel="Adicionar evento" />
+      <AppHeader title="Calendário" />
       <div className="calendar-page__content">
         <div className="calendar-month">
           <strong>Agosto de 2026</strong>

@@ -5,6 +5,7 @@ from app.dependencies.questionarios import QuestionarioServiceDep
 from app.schemas.common import ApiResponse, ErrorResponse, response_meta
 from app.schemas.questionarios import (
     QuestionarioAtualOut,
+    QuestionarioConclusaoRequest,
     QuestionarioRespostaRequest,
 )
 
@@ -67,8 +68,12 @@ async def complete_current_questionnaire(
     request: Request,
     profile: CurrentProfileDep,
     service: QuestionarioServiceDep,
+    body: QuestionarioConclusaoRequest | None = None,
 ) -> ApiResponse[QuestionarioAtualOut]:
-    questionario = await service.complete(profile.id)
+    questionario = (
+        await service.submit(profile.id, body.questionario_id, body.respostas)
+        if body is not None else await service.complete(profile.id)
+    )
     return ApiResponse(
         data=QuestionarioAtualOut.model_validate(questionario),
         meta=response_meta(request),

@@ -1,4 +1,4 @@
-import { ArrowRight, LockKeyhole, Sparkles } from 'lucide-react'
+import { ArrowRight, Lightbulb, LockKeyhole } from 'lucide-react'
 import { useFirstAccessGuideAction } from '../FirstAccessGuide/FirstAccessGuideContext'
 import './RecommendationCTA.css'
 
@@ -18,7 +18,7 @@ function RecommendationCTA({ enabled = false, checking = false, onStart, guideRe
         <span className="recommendation-cta__dot recommendation-cta__dot--bottom" />
 
         <div className="recommendation-cta__icon">
-          {enabled ? <Sparkles size={20} strokeWidth={2.2} /> : <LockKeyhole size={18} strokeWidth={2.2} />}
+          {enabled ? <Lightbulb size={20} strokeWidth={2.2} /> : <LockKeyhole size={18} strokeWidth={2.2} />}
         </div>
       </div>
 

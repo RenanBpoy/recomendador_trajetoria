@@ -1,5 +1,4 @@
-import { CircleUserRound, Grid3X3, House, ListChecks } from 'lucide-react'
-// import { CalendarDays } from 'lucide-react' // Agenda temporariamente oculta da navegação.
+import { CalendarDays, CircleUserRound, Grid3X3, House } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import {
   useFirstAccessGuideAction,
@@ -10,7 +9,7 @@ import './BottomNav.css'
 const items = [
   { id: 'início', label: 'Início', to: '/home', icon: House },
   { id: 'grade', label: 'Grade', to: '/grade', icon: Grid3X3 },
-  { id: 'plano', label: 'Plano', to: '/semana', icon: ListChecks },
+  { id: 'plano', label: 'Plano', to: '/semana', icon: CalendarDays },
   // { id: 'agenda', label: 'Agenda', to: '/calendario', icon: CalendarDays },
   { id: 'perfil', label: 'Perfil', to: '/perfil', icon: CircleUserRound },
 ]

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AlertCircle, ArrowLeft, CalendarCheck2, RefreshCw, Sparkles } from 'lucide-react'
+import { AlertCircle, ArrowLeft, CalendarCheck2, Lightbulb, RefreshCw } from 'lucide-react'
 import AppHeader from '../../components/AppHeader/AppHeader'
 import BottomNav from '../../components/BottomNav/BottomNav'
 import RecommendationDisciplineCard from '../../components/RecommendationDisciplineCard/RecommendationDisciplineCard'
@@ -113,7 +113,7 @@ function Recomendacao() {
         {!loading && !error && recommendation && (
           <>
             <section className="recommendation-summary">
-              <div className="recommendation-summary__icon"><Sparkles size={19} /></div>
+              <div className="recommendation-summary__icon"><Lightbulb size={19} /></div>
               <div>
                 <span>RECOMENDAÇÃO INICIAL</span>
                 <h2>{recommendation.titulo}</h2>

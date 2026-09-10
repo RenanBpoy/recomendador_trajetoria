@@ -44,7 +44,6 @@ export default function TambemAnalisamos() {
       <AppHeader title="Também analisamos" icon={ArrowLeft} to="/recomendacao" ariaLabel="Voltar para a recomendação" />
       <div className="also-analyzed-page__content">
         <section className="also-analyzed-intro">
-          <span>OUTRAS POSSIBILIDADES ANALISADAS</span>
           <h2>O Salomão também analisou estas disciplinas</h2>
           <p>O Salomão também considerou estas disciplinas, mas encontrou motivos para não incluí-las na recomendação atual.</p>
         </section>

@@ -71,22 +71,24 @@ const steps = [
     nextLabel: 'Vamos lá!',
   },
   {
+    targetId: 'first-access-mascot',
     route: '/home',
-    standalone: true,
     manualAdvance: true,
     dimPage: false,
     showResumePreview: true,
-    imageSrc: mascotes.lendo,
+    highlightTarget: false,
+    placement: 'top',
     text: 'Caso queira explorar por conta própria, ficarei lendo aqui pertinho, é só me chamar para continuar de onde parou.',
     nextLabel: 'Continuar',
   },
   {
+    targetId: 'first-access-mascot',
     route: '/home',
-    standalone: true,
     manualAdvance: true,
     dimPage: false,
     showResumePreview: true,
-    imageSrc: mascotes.dormindo,
+    highlightTarget: false,
+    placement: 'top',
     text: 'Se eu estiver no caminho, é só me segurar e arrastar para outro canto da tela.',
     nextLabel: 'Continuar',
   },
@@ -154,6 +156,15 @@ const steps = [
     dimPage: false,
     imageSrc: mascotes.acenando,
     text: 'Aqui não existem respostas certas ou erradas!',
+    nextLabel: 'Responder',
+  },
+  {
+    route: '/questionario',
+    standalone: true,
+    manualAdvance: true,
+    dimPage: false,
+    imageSrc: mascotes.refletindo,
+    text: 'Pelo menos foi isso que me ensinaram. Ou fui eu que ensinei? Hm... ser um grande sábio confunde a memória às vezes.',
     nextLabel: 'Responder',
   },
 
@@ -243,6 +254,24 @@ const steps = [
     nextLabel: 'Continuar',
   },
   {
+    route: '/home',
+    standalone: true,
+    manualAdvance: true,
+    dimPage: false,
+    imageSrc: mascotes.refletindo,
+    text: 'Engraçado... depois de conhecer tanta coisa sobre você, percebi que não lembro de onde tirei o meu próprio nome.',
+    nextLabel: 'Continuar',
+  },
+  {
+    route: '/home',
+    standalone: true,
+    manualAdvance: true,
+    dimPage: false,
+    imageSrc: mascotes.pensando,
+    text: 'Salomão... certo? Ah, deixa pra lá. Vamos seguir em frente.',
+    nextLabel: 'Continuar',
+  },
+  {
     targetId: 'first-access-recommendation',
     actionId: 'start-recommendation',
     route: '/home',
@@ -286,7 +315,17 @@ const steps = [
     dimPage: false,
     showResumePreview: true,
     imageSrc: mascotes.deCostas,
-    text: 'Se precisar de sabedoria felina, é só chamar o Salomão!',
+    text: 'Se precisar de um conselho sábio, é só chamar o Salomão!',
+    nextLabel: 'Continuar',
+  },
+  {
+    route: '/recomendacao',
+    standalone: true,
+    manualAdvance: true,
+    dimPage: false,
+    showResumePreview: true,
+    imageSrc: mascotes.refletindo,
+    text: 'Ou era... Salmão?',
     nextLabel: 'Finalizar',
   },
 ];
@@ -334,6 +373,18 @@ export function FirstAccessGuideProvider({ children }) {
     return targetRefCallbacks.current.get(targetId)
   }, [])
 
+  const mascotTargetRef = useCallback((node) => {
+    setTargets((current) => {
+      if (current['first-access-mascot'] === node) return current
+      if (!node) {
+        const next = { ...current }
+        delete next['first-access-mascot']
+        return next
+      }
+      return { ...current, 'first-access-mascot': node }
+    })
+  }, [])
+
   useEffect(() => {
     function syncAuth() {
       const nextUserId = currentUserId()
@@ -367,12 +418,12 @@ export function FirstAccessGuideProvider({ children }) {
   }, [navigate, userId])
 
   useEffect(() => {
-    if (!open || minimized || !target) return undefined
+    if (!open || minimized || !target || activeStep?.targetId === 'first-access-mascot') return undefined
     const frame = window.requestAnimationFrame(() => {
       target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [open, minimized, stepIndex, target])
+  }, [activeStep?.targetId, open, minimized, stepIndex, target])
 
   const finishGuide = useCallback(() => {
     if (userId) completeFirstAccessGuide(userId)
@@ -483,6 +534,7 @@ export function FirstAccessGuideProvider({ children }) {
       />
       {(!open || minimized || (activeStep?.showResumePreview && location.pathname === activeStep.route)) && userId && !['/login', '/cadastro', '/'].includes(location.pathname) && (
         <MinimizedGuide
+          buttonRef={mascotTargetRef}
           onResume={open && minimized ? resumeGuide : !open ? (target) => setAssistantPanel((current) => current?.routeKey === location.key ? null : { target, routeKey: location.key, userId }) : undefined}
           checking={open && checking}
           error={open ? resumeError : ''}

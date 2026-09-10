@@ -1,4 +1,3 @@
-import { WandSparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader/AppHeader'
@@ -185,7 +184,7 @@ function Grade() {
 
   return (
     <main className="mobile-page grade-page">
-      <AppHeader title="Grade curricular" icon={WandSparkles} ariaLabel="Gerar grade recomendada" />
+      <AppHeader title="Grade curricular" />
       <div className="grade-page__content">
         <section className="academic-context" aria-label="Contexto acadêmico">
           <div>

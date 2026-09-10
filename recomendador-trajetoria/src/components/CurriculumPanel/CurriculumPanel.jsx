@@ -83,7 +83,7 @@ function CurriculumPanel({ components, history, manualMappings, loading, onSelec
       <div className="course-stats">
         {stats.map(({ key, count, label, tone, icon: Icon }) => (
           <article key={key} className={`course-stat course-stat--${tone}`}>
-            <div><Icon size={14} strokeWidth={3} /><strong>{count}</strong></div>
+            <div className="course-stat__value"><Icon size={18} strokeWidth={2.5} aria-hidden="true" /><strong>{count}</strong></div>
             <span>{label}</span>
           </article>
         ))}

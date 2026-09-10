@@ -99,6 +99,8 @@
 
 .carga-planejada__legendas strong {
   color: var(--text);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .carga-planejada__indicador {
@@ -121,7 +123,7 @@
   text-align: right;
 }
 
-@media (max-width: 350px) {
+@media (max-width: 480px) {
   .carga-planejada { min-height: auto; padding: 20px; border-radius: 20px; }
   .carga-planejada__titulo { font-size: 21px; }
   .carga-planejada__rodape { align-items: flex-start; flex-direction: column; }

@@ -36,6 +36,12 @@ recomendar obrigatórias de semestres futuros. O adiantamento exige taxa de
 reprovação conhecida abaixo de 25%, oferta com horário, ausência de conflito e
 espaço no limite semanal calculado. A disciplina adiantada não recebe o bônus
 de 20 pontos reservado às matérias do semestre atual.
+
+Trabalhos de conclusão
+----------------------
+Componentes relacionados a TCC, trabalho de conclusão ou trabalho de
+graduação ficam fora do cálculo. Eles não são recomendados e também não são
+incluídos entre as disciplinas não selecionadas.
 """
 
 from __future__ import annotations
@@ -94,6 +100,15 @@ LIMITE_MAXIMO_HORAS_SEMANAIS = 24.0
 TAXA_RISCO_MEDIO = 25.0
 TAXA_RISCO_ALTO = 40.0
 LIMIAR_SEMESTRE_CONSOLIDADO = 0.50
+TERMOS_TRABALHO_CONCLUSAO = (
+    "trabalho de conclusao",
+    "trabalho de graduacao",
+    "trabalho final de graduacao",
+    "trabalho final de curso",
+    "projeto de conclusao",
+    "projeto final de curso",
+    "monografia",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -224,7 +239,9 @@ class RecomendacaoService:
     ) -> ContextoSemestre:
         curriculum = await self._get_curriculum(profile)
         ano_alvo, semestre_alvo = await self._target_period(ano, semestre)
-        components = await self._provider.list_curriculum_components(curriculum.id)
+        components = self._recommendation_components(
+            await self._provider.list_curriculum_components(curriculum.id)
+        )
         history = await self._provider.get_school_history(profile.matricula)
         equivalences = await self._provider.list_discipline_equivalences()
         return self._build_context(
@@ -286,7 +303,9 @@ class RecomendacaoService:
     ) -> RecomendacaoAtual:
         curriculum = await self._get_curriculum(profile)
         ano_alvo, semestre_alvo = await self._target_period(ano, semestre)
-        components = await self._provider.list_curriculum_components(curriculum.id)
+        components = self._recommendation_components(
+            await self._provider.list_curriculum_components(curriculum.id)
+        )
         history = await self._provider.get_school_history(profile.matricula)
         if history is None:
             raise ResourceNotFoundError("Aluno", profile.matricula)
@@ -624,6 +643,31 @@ class RecomendacaoService:
             char
             for char in normalize("NFD", value.lower())
             if not combining(char)
+        )
+
+    @classmethod
+    def _is_completion_work(cls, component: ComponenteCurricular) -> bool:
+        name = cls._normalized_text(
+            " ".join(
+                part
+                for part in (component.disciplina_nome, component.nome_no_ppc)
+                if part
+            )
+        )
+        words = set(name.replace("-", " ").split())
+        return bool(words.intersection({"tcc", "tg"})) or any(
+            term in name for term in TERMOS_TRABALHO_CONCLUSAO
+        )
+
+    @classmethod
+    def _recommendation_components(
+        cls,
+        components: tuple[ComponenteCurricular, ...],
+    ) -> tuple[ComponenteCurricular, ...]:
+        return tuple(
+            component
+            for component in components
+            if not cls._is_completion_work(component)
         )
 
     @classmethod

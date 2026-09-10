@@ -26,6 +26,11 @@
   transform: translateX(-50%);
 }
 
+.mascot-tip--with-portrait {
+  --portrait-size: clamp(142px, 40vw, 166px);
+  padding-right: calc(var(--portrait-size) * 1.06 - 28px + 12px);
+}
+.mascot-tip--with-portrait .mascot-tip__portrait { width: var(--portrait-size); }
 .mascot-tip__layout { display: block; }
 .mascot-tip__content { position: relative; z-index: 1; min-width: 0; }
 
@@ -72,8 +77,12 @@
 }
 
 .mascot-tip__close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  z-index: 3;
   width: 44px;
-  flex: 0 0 44px;
+  box-shadow: 0 3px 12px rgba(0, 8, 24, .2);
   border-radius: 50%;
   background: #edf4f8;
   color: var(--tip-navy);
@@ -136,6 +145,7 @@
   }
 
   .mascot-tip__text { font-size: 13px; }
+  .mascot-tip--with-portrait { padding-right: 139px; }
 
   .mascot-tip__portrait {
     right: -24px;

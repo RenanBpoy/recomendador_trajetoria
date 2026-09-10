@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import './AppHeader.css'
 
 function AppHeader({ title, icon: Icon, to, onClick, ariaLabel = 'Abrir ação' }) {
-  const action = Icon ? (
+  const action = Icon && (to || typeof onClick === 'function') ? (
     to ? (
       <Link className="icon-square" to={to} aria-label={ariaLabel}>
         <Icon size={18} strokeWidth={2} />

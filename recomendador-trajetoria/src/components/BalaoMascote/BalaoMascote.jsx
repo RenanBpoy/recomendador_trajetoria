@@ -78,7 +78,7 @@ function BalaoMascote({
         <section
           ref={setFloating}
           {...getFloatingProps({
-            className: `mascot-tip${standalone ? ' mascot-tip--standalone' : ''} ${className}`,
+            className: `mascot-tip${imageSrc ? ' mascot-tip--with-portrait' : ''}${standalone ? ' mascot-tip--standalone' : ''} ${className}`,
             style: {
               ...(standalone ? {} : floatingStyles),
               visibility: invisible ? 'hidden' : 'visible',
@@ -104,15 +104,10 @@ function BalaoMascote({
                 {text}
               </p>
               {children}
-              {(onNext || (onClose && showCloseButton)) && <div className="mascot-tip__controls">
+              {onNext && <div className="mascot-tip__controls">
                 {onNext && (
                   <button type="button" className="mascot-tip__next" aria-label={nextLabel} onClick={onNext}>
                     Continuar
-                  </button>
-                )}
-                {onClose && showCloseButton && (
-                  <button type="button" className="mascot-tip__close" aria-label={closeLabel} onClick={onClose}>
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
                   </button>
                 )}
               </div>}
@@ -129,6 +124,11 @@ function BalaoMascote({
               </div>
             )}
           </div>
+          {onClose && showCloseButton && (
+            <button type="button" className="mascot-tip__close" aria-label={closeLabel} onClick={onClose}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+            </button>
+          )}
         </section>
       </FloatingFocusManager>
     </FloatingPortal>

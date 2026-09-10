@@ -1,4 +1,4 @@
-import { Bell, CircleHelp, CircleUserRound, GraduationCap, LockKeyhole, PanelTopClose } from 'lucide-react'
+import { Bell, CircleHelp, CircleUserRound, GraduationCap, LockKeyhole } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader/AppHeader'
@@ -81,7 +81,7 @@ function Perfil() {
 
   return (
     <main className="mobile-page profile-page">
-      <AppHeader title="Perfil" icon={PanelTopClose} ariaLabel="Abrir menu" />
+      <AppHeader title="Perfil" />
       <div className="profile-page__content">
         <section className="profile-identity">
           <div className="profile-avatar" />

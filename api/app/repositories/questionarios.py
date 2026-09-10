@@ -175,6 +175,46 @@ class SqlAlchemyQuestionarioRepository:
         preenchimento.atualizado_em = now
         await self._session.commit()
 
+    async def save_complete(self, *, user_id: UUID, questionario_id: int, respostas: dict[int, int]) -> None:
+        now = datetime.now(timezone.utc)
+        try:
+            preenchimento = await self._session.scalar(
+                select(QuestionarioPreenchimentoModel).where(
+                    QuestionarioPreenchimentoModel.usuario_id == user_id,
+                    QuestionarioPreenchimentoModel.questionario_id == questionario_id,
+                ).with_for_update()
+            )
+            if preenchimento is None:
+                preenchimento = QuestionarioPreenchimentoModel(
+                    usuario_id=user_id, questionario_id=questionario_id,
+                    status="EM_ANDAMENTO", iniciado_em=now, atualizado_em=now,
+                )
+                self._session.add(preenchimento)
+                await self._session.flush()
+            existentes = {r.pergunta_id: r for r in (await self._session.scalars(
+                select(QuestionarioRespostaModel).where(
+                    QuestionarioRespostaModel.preenchimento_id == preenchimento.id
+                )
+            )).all()}
+            for pergunta_id, valor in respostas.items():
+                resposta = existentes.get(pergunta_id)
+                if resposta is None:
+                    self._session.add(QuestionarioRespostaModel(
+                        preenchimento_id=preenchimento.id, usuario_id=user_id,
+                        questionario_id=questionario_id, pergunta_id=pergunta_id,
+                        valor=valor, respondido_em=now, atualizado_em=now,
+                    ))
+                else:
+                    resposta.valor = valor
+                    resposta.atualizado_em = now
+            preenchimento.status = "CONCLUIDO"
+            preenchimento.atualizado_em = now
+            preenchimento.concluido_em = now
+            await self._session.commit()
+        except Exception:
+            await self._session.rollback()
+            raise
+
     async def complete(self, *, user_id: UUID, questionario_id: int) -> None:
         preenchimento = await self._session.scalar(
             select(QuestionarioPreenchimentoModel).where(

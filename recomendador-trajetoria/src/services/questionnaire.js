@@ -29,10 +29,10 @@ export async function saveQuestionnaireAnswer(questionId, value) {
   return questionnaire
 }
 
-export async function completeCurrentQuestionnaire() {
+export async function completeCurrentQuestionnaire(questionnaireId, answers) {
   const questionnaire = await apiPost(
     '/questionarios/atual/concluir',
-    undefined,
+    { questionario_id: questionnaireId, respostas: answers },
     getAccessToken(),
   )
   setSessionCache(cacheKey(), questionnaire, QUESTIONNAIRE_TTL)

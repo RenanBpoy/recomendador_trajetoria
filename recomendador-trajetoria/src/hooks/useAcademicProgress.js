@@ -16,6 +16,10 @@ const emptySummary = {
   remainingHours: 0,
 }
 
+// As 300 h de atividades complementares fazem parte da carga total do PPC,
+// mas não são acompanhadas pela grade exibida no aplicativo.
+const COMPLEMENTARY_ACTIVITIES_HOURS = 300
+
 function summarizeProgress(progress, curriculum) {
   const approved = progress.filter((item) => item.estado_academico.key === 'approved')
   const failed = progress.filter((item) => item.estado_academico.key === 'failed')
@@ -28,7 +32,8 @@ function summarizeProgress(progress, curriculum) {
     (total, item) => total + Number(item.carga_horaria || 0),
     0,
   )
-  const totalHours = Number(curriculum?.carga_horaria_total || componentsHours)
+  const ppcHours = Number(curriculum?.carga_horaria_total || componentsHours)
+  const totalHours = Math.max(0, ppcHours - COMPLEMENTARY_ACTIVITIES_HOURS)
 
   return {
     approved: approved.length,

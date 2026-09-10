@@ -12,7 +12,6 @@ import QuestionnaireSection from '../../components/QuestionnaireSection/Question
 import {
   completeCurrentQuestionnaire,
   getCurrentQuestionnaire,
-  saveQuestionnaireAnswer,
 } from '../../services/questionnaire'
 import './Questionario.css'
 
@@ -54,22 +53,19 @@ function Questionario() {
     return () => { active = false }
   }, [])
 
-  async function handleAnswer(value) {
+  function handleAnswer(value) {
     if (!currentQuestion || saving) return
-    setSaving(true)
     setError('')
-    setSaveState('Salvando resposta...')
-    try {
-      const saved = await saveQuestionnaireAnswer(currentQuestion.id, value)
-      setQuestionnaire(saved)
-      setSaveState('Resposta salva automaticamente')
-      completeGuideAction('answer-questionnaire')
-    } catch (requestError) {
-      setError(requestError.message || 'Não foi possível salvar a resposta.')
-      setSaveState('')
-    } finally {
-      setSaving(false)
-    }
+    setQuestionnaire((current) => ({
+      ...current,
+      secoes: current.secoes.map((section) => ({
+        ...section,
+        perguntas: section.perguntas.map((question) => question.id === currentQuestion.id
+          ? { ...question, resposta: value } : question),
+      })),
+    }))
+    setSaveState('Respostas serão salvas ao concluir.')
+    completeGuideAction('answer-questionnaire')
   }
 
   async function handleNext() {
@@ -84,7 +80,9 @@ function Questionario() {
     setError('')
     setSaveState('Concluindo questionário...')
     try {
-      await completeCurrentQuestionnaire()
+      await completeCurrentQuestionnaire(questionnaire.id, Object.fromEntries(
+        questions.map((question) => [question.id, question.resposta]),
+      ))
       navigate('/home', { replace: true })
     } catch (requestError) {
       setError(requestError.message || 'Não foi possível concluir o questionário.')
@@ -120,8 +118,8 @@ function Questionario() {
 
   const currentSection = currentQuestion.section
   const sectionIndex = questionnaire.secoes.findIndex((section) => section.id === currentSection.id)
-  const answered = questionnaire.preenchimento.total_respondidas
-  const total = questionnaire.preenchimento.total_perguntas
+  const answered = questions.filter((question) => question.resposta != null).length
+  const total = questions.length
   const percentage = total ? Math.round((answered / total) * 100) : 0
 
   return (
@@ -195,7 +193,7 @@ function Questionario() {
 
         <p className="questionnaire-save-note" role="status">
           <Sparkles size={13} aria-hidden="true" />
-          {saveState || 'As respostas são salvas automaticamente'}
+          {saveState || 'As respostas serão salvas ao concluir. Finalize antes de sair.'}
         </p>
       </main>
     </div>

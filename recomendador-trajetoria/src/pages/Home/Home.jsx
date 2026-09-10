@@ -1,4 +1,4 @@
-import { CircleUserRound, Grid3X3, Sparkles } from 'lucide-react'
+import { CalendarDays, CircleUserRound, Grid3X3 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader/AppHeader'
@@ -113,16 +113,16 @@ function Home() {
           <div className="home-actions__grid">
             <QuickActionCard
               to="/semana"
-              icon={Sparkles}
-              title="Ver meu plano"
-              description={`Sugestões para ${currentAcademicPeriod()}`}
+              icon={CalendarDays}
+              title="Ver meu cronograma"
+              description={`Para ${currentAcademicPeriod()}`}
             />
             <QuickActionCard
               to="/grade"
               icon={Grid3X3}
               tone="violet"
               title="Montar grade"
-              description="Organize disciplinas e horários"
+              description="Organize disciplinas"
             />
           </div>
         </section>

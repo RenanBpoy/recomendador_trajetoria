@@ -7,7 +7,7 @@ function constrain(x, y) {
   return { x: Math.max(8, Math.min(x, window.innerWidth - size - 8)), y: Math.max(8, Math.min(y, window.innerHeight - size - 8)) }
 }
 
-export default function MinimizedGuide({ onResume, checking, error, label = 'Retomar guia. Segure e arraste para mover.' }) {
+export default function MinimizedGuide({ onResume, checking, error, label = 'Retomar guia. Segure e arraste para mover.', buttonRef }) {
   const [position, setPosition] = useState(() => constrain(window.innerWidth - size - 16, window.innerHeight - size - 94))
   const drag = useRef(null)
   const suppressClick = useRef(false)
@@ -21,6 +21,7 @@ export default function MinimizedGuide({ onResume, checking, error, label = 'Ret
   return createPortal(
     <>
       <button
+        ref={buttonRef}
         className="minimized-guide"
         style={{ left: position.x, top: position.y }}
         type="button"

@@ -1,4 +1,4 @@
-import { BarChart3, BookOpenText, Clock3, Sparkles } from 'lucide-react'
+import { BarChart3, BookOpenText, Clock3, Lightbulb } from 'lucide-react'
 import './RecommendationDisciplineCard.css'
 
 const riskLabels = {
@@ -48,7 +48,7 @@ function RecommendationDisciplineCard({ discipline }) {
       )}
 
       <div className="recommendation-discipline__justification">
-        <Sparkles size={13} aria-hidden="true" />
+        <Lightbulb size={13} aria-hidden="true" />
         <div>
           <strong>Por que o Salomão recomendou esta disciplina?</strong>
           <p>{discipline.justificativa}</p>

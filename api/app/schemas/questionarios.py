@@ -9,6 +9,11 @@ class QuestionarioRespostaRequest(BaseModel):
     valor: int = Field(ge=1, le=10)
 
 
+class QuestionarioConclusaoRequest(BaseModel):
+    questionario_id: int
+    respostas: dict[int, int] = Field(min_length=1, max_length=100)
+
+
 class QuestionarioPerguntaOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
