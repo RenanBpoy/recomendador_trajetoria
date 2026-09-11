@@ -17,9 +17,9 @@ import { weeklyActivityLabel, weeklyDisciplineIdentity } from '../../utils/weekl
 import './Semana.css'
 
 const activityTypes = [
-  { value: 'DISCIPLINA', label: '+ Disciplina', tone: 'mint' },
   { value: 'ESTAGIO', label: '+ Estágio', tone: 'purple' },
   { value: 'OUTRO', label: '+ Outro', tone: 'pink' },
+  { value: 'DISCIPLINA', label: '+ Disciplina', tone: 'mint' },
 ]
 
 function viewItems(items) {
@@ -68,7 +68,7 @@ function Semana() {
   const planSaveGuideRef = useFirstAccessGuideTarget('first-access-plan-save')
   const completeGuideAction = useFirstAccessGuideAction()
   const registration = getStoredAuth()?.perfil?.matricula
-  const [selectedType, setSelectedType] = useState('DISCIPLINA')
+  const [selectedType, setSelectedType] = useState('ESTAGIO')
   const [savedItems, setSavedItems] = useState([])
   const [items, setItems] = useState([])
   const [editorItem, setEditorItem] = useState(null)

@@ -80,7 +80,7 @@ export function academicStatusFor(entry) {
   if (!entry) return { key: 'pending', label: 'Pendente' }
 
   const status = normalizeStatus(entry.situacao_final)
-  if (status.includes('APROVADO') || status.includes('DISPENSADO') || status.includes('DISPENSA')) {
+  if (status.includes('APROVADO') || status.includes('DISPENSADO') || status.includes('DISPENSA') || status.includes('APROVEITAMENTO')) {
     return { key: 'approved', label: 'Aprovada' }
   }
   if (status.includes('REPROVADO')) {

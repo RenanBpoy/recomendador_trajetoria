@@ -1,4 +1,5 @@
 import { BarChart3, BookOpenText, Clock3, Lightbulb } from 'lucide-react'
+import { formatRoundedHours } from '../../utils/hours'
 import './RecommendationDisciplineCard.css'
 
 const riskLabels = {
@@ -27,7 +28,7 @@ function RecommendationDisciplineCard({ discipline }) {
           <b>{hasFailureRate ? `${discipline.reprovacao}%` : 'Sem dados'}</b>
           {hasFailureRate ? ' de reprovação' : ' históricos'}
         </span>
-        <span><Clock3 size={13} /><b>{discipline.horasSemanais} h</b> por semana</span>
+        <span><Clock3 size={13} /><b>{formatRoundedHours(discipline.horasSemanais)} h</b> por semana</span>
       </div>
 
       <div

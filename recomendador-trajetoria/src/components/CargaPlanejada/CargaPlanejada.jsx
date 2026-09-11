@@ -1,3 +1,4 @@
+import { formatRoundedHours } from '../../utils/hours'
 import './CargaPlanejada.css'
 
 const categories = [
@@ -5,13 +6,6 @@ const categories = [
   { key: 'estagio', label: 'de estágio', tone: 'purple' },
   { key: 'outras', label: 'em outras atividades', tone: 'pink' },
 ]
-
-function formatHours(value) {
-  return Number(value || 0).toLocaleString('pt-BR', {
-    minimumFractionDigits: Number.isInteger(value) ? 0 : 1,
-    maximumFractionDigits: 1,
-  })
-}
 
 function classifyLoad(totalHours, weeklyLimit) {
   if (totalHours === 0) {
@@ -58,7 +52,7 @@ function CargaPlanejada({
         </div>
 
         <div className="carga-planejada__total">
-          <strong>{formatHours(totalHours)} h</strong>
+          <strong>{formatRoundedHours(totalHours)} h</strong>
           <span>no total</span>
         </div>
       </div>
@@ -66,7 +60,7 @@ function CargaPlanejada({
       <div
         className="carga-planejada__barra"
         role="img"
-        aria-label={`${formatHours(horasDisciplinas)} horas em disciplinas, ${formatHours(horasEstagio)} horas de estágio e ${formatHours(horasOutras)} horas em outras atividades`}
+        aria-label={`${formatRoundedHours(horasDisciplinas)} horas em disciplinas, ${formatRoundedHours(horasEstagio)} horas de estágio e ${formatRoundedHours(horasOutras)} horas em outras atividades`}
       >
         {categories.map((category) => (
           <span
@@ -82,7 +76,7 @@ function CargaPlanejada({
           {categories.map((category) => (
             <span key={category.key}>
               <i className={`carga-planejada__indicador carga-planejada__indicador--${category.tone}`} />
-              <strong>{formatHours(hours[category.key])} h</strong>
+              <strong>{formatRoundedHours(hours[category.key])} h</strong>
               {category.label}
             </span>
           ))}

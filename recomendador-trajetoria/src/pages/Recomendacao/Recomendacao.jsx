@@ -6,6 +6,7 @@ import RecommendationDisciplineCard from '../../components/RecommendationDiscipl
 import ScheduleGrid from '../../components/ScheduleGrid/ScheduleGrid'
 import { applyRecommendationToWeeklyPlan } from '../../services/plan'
 import { getCurrentRecommendation } from '../../services/recommendation'
+import { formatRoundedHours } from '../../utils/hours'
 import './Recomendacao.css'
 
 const recommendationColors = ['mint', 'purple', 'pink', 'blue', 'amber', 'peach', 'lilac', 'sage']
@@ -119,7 +120,7 @@ function Recomendacao() {
                 <h2>{recommendation.titulo}</h2>
                 <p>{recommendation.mensagem}</p>
               </div>
-              <strong>{recommendation.horas_semanais} h/semana</strong>
+              <strong>{formatRoundedHours(recommendation.horas_semanais)} h/semana</strong>
             </section>
 
             <section className="recommendation-schedule" aria-labelledby="recommendation-schedule-title">

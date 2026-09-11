@@ -1,21 +1,36 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import readingMascot from '../../assets/img/reading.png'
+import sleepingMascot from '../../assets/img/salomao-sleeping.png'
 
 const size = 120
+const sleepDelay = 60_000
 function constrain(x, y) {
   return { x: Math.max(8, Math.min(x, window.innerWidth - size - 8)), y: Math.max(8, Math.min(y, window.innerHeight - size - 8)) }
 }
 
 export default function MinimizedGuide({ onResume, checking, error, label = 'Retomar guia. Segure e arraste para mover.', buttonRef }) {
   const [position, setPosition] = useState(() => constrain(window.innerWidth - size - 16, window.innerHeight - size - 94))
+  const [sleeping, setSleeping] = useState(false)
   const drag = useRef(null)
   const suppressClick = useRef(false)
+  const sleepTimer = useRef(null)
+
+  function restartSleepTimer() {
+    window.clearTimeout(sleepTimer.current)
+    setSleeping(false)
+    sleepTimer.current = window.setTimeout(() => setSleeping(true), sleepDelay)
+  }
 
   useEffect(() => {
     const resize = () => setPosition((current) => constrain(current.x, current.y))
     window.addEventListener('resize', resize)
     return () => window.removeEventListener('resize', resize)
+  }, [])
+
+  useEffect(() => {
+    sleepTimer.current = window.setTimeout(() => setSleeping(true), sleepDelay)
+    return () => window.clearTimeout(sleepTimer.current)
   }, [])
 
   return createPortal(
@@ -46,10 +61,11 @@ export default function MinimizedGuide({ onResume, checking, error, label = 'Ret
         onLostPointerCapture={() => { drag.current = null }}
         onClick={(event) => {
           if (suppressClick.current) { suppressClick.current = false; return }
+          restartSleepTimer()
           if (!checking) onResume?.(event.currentTarget)
         }}
       >
-        <img src={readingMascot} alt="" draggable={false} />
+        <img src={sleeping ? sleepingMascot : readingMascot} alt="" draggable={false} />
       </button>
       {error && <p className="minimized-guide__error" role="alert">{error}</p>}
     </>, document.body,

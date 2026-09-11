@@ -17,6 +17,7 @@ import DiarioClasse from './pages/DiariosClasse/DiarioClasse'
 import TambemAnalisamos from './pages/TambemAnalisamos/TambemAnalisamos'
 import RequireAuth from './components/RequireAuth/RequireAuth'
 import { FirstAccessGuideProvider } from './components/FirstAccessGuide/FirstAccessGuide'
+import LoadingScreen from './components/LoadingScreen/LoadingScreen'
 
 const protectedPage = (page) => <RequireAuth>{page}</RequireAuth>
 
@@ -46,6 +47,7 @@ function App() {
           <Route path="/diarios-classe/:id" element={protectedPage(<DiarioClasse />)} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        <LoadingScreen />
       </FirstAccessGuideProvider>
     </BrowserRouter>
   )

@@ -1,4 +1,4 @@
-import { CircleHelp, CircleUserRound, GraduationCap, LockKeyhole } from 'lucide-react'
+import { CircleHelp, CircleUserRound, GraduationCap, LockKeyhole, RotateCcw, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader/AppHeader'
@@ -24,6 +24,9 @@ import {
   uploadAvatar,
 } from '../../services/profile'
 import './Perfil.css'
+
+const showDevelopmentTools = import.meta.env.DEV
+  && ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
 
 const settings = [
   { key: 'personal', title: 'Dados pessoais', subtitle: 'Nome, e-mail e nascimento', icon: CircleUserRound },
@@ -232,7 +235,7 @@ function PerfilPage() {
 
   async function handleResetFirstAccessProgress() {
     const userId = auth?.usuario?.id || profile?.id
-    if (!userId || busyAction) return
+    if (!showDevelopmentTools || !userId || busyAction) return
     setBusyAction('reset-first-access')
     setPanelError('')
     setPanelFeedback('')
@@ -381,12 +384,25 @@ function PerfilPage() {
           <section className="profile-dialog__section profile-help"><h3>Minha grade não reconheceu uma disciplina</h3><p>Abra a grade, envie o histórico escolar e selecione manualmente uma equivalência na disciplina pendente.</p></section>
           <section className="profile-dialog__section profile-help"><h3>O progresso parece incorreto</h3><p>Confira se o PPC selecionado corresponde ao currículo em que você ingressou e se o histórico mais recente foi carregado.</p></section>
           <section className="profile-dialog__section profile-help">
-            <h3>Guia de primeiro acesso</h3>
-            <p>Reinicie os balões de apresentação para conferir novamente o fluxo inicial do aplicativo.</p>
-            <button className="profile-dialog__submit is-secondary" type="button" onClick={handleRestartFirstAccessGuide}>
-              Rever guia inicial
-            </button>
-            {!showResetConfirmation ? (
+            <h3>Guia e conta</h3>
+            <p>Reveja a apresentação do Salomão ou gerencie sua conta.</p>
+            <div className="profile-help__actions">
+              <button className="profile-dialog__submit is-secondary" type="button" disabled={Boolean(busyAction)} onClick={handleRestartFirstAccessGuide}>
+                <RotateCcw size={18} aria-hidden="true" />
+                <span>Rever guia inicial</span>
+              </button>
+              <button
+                className="profile-dialog__submit is-danger"
+                type="button"
+                disabled={Boolean(busyAction)}
+                aria-expanded={showDeleteConfirmation}
+                onClick={() => { setShowDeleteConfirmation(true); setDeleteConfirmation(''); setShowResetConfirmation(false); setPanelError('') }}
+              >
+                <Trash2 size={18} aria-hidden="true" />
+                <span>Excluir minha conta</span>
+              </button>
+            </div>
+            {showDevelopmentTools && (!showResetConfirmation ? (
               <button
                 className="profile-dialog__submit is-danger profile-help__reset"
                 type="button"
@@ -418,12 +434,8 @@ function PerfilPage() {
                   </button>
                 </div>
               </div>
-            )}
-            {!showDeleteConfirmation ? (
-              <button className="profile-dialog__submit is-danger profile-help__reset" type="button" disabled={Boolean(busyAction)} onClick={() => { setShowDeleteConfirmation(true); setDeleteConfirmation(''); setShowResetConfirmation(false); setPanelError('') }}>
-                Excluir minha conta
-              </button>
-            ) : (
+            ))}
+            {showDeleteConfirmation && (
               <form className="profile-help__confirmation profile-dialog__form" onSubmit={handleDeleteAccount}>
                 <strong>Excluir sua conta definitivamente?</strong>
                 <p>Seu perfil, fotos, histórico enviado, equivalências manuais, questionário e plano serão apagados. Não é possível desfazer.</p>
@@ -437,10 +449,6 @@ function PerfilPage() {
             )}
             {panelError && <p className="profile-dialog__feedback is-error" role="alert">{panelError}</p>}
           </section>
-          <div className="profile-dialog__actions">
-            <button className="profile-dialog__submit" type="button" onClick={() => navigate('/grade')}>Abrir grade</button>
-            <button className="profile-dialog__submit is-secondary" type="button" onClick={() => navigate('/')}>Ir para o início</button>
-          </div>
         </ProfileDialog>
       )}
     </main>

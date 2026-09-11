@@ -12,6 +12,7 @@ from app.domain.entities import HistoricoDocumento, ItemHistoricoDocumento
 
 
 _STATUS = (
+    "Aproveitamento por Adaptação",
     "Dispensa autodidatismo",
     "Dispensado com nota",
     "Dispensado sem nota",
@@ -32,6 +33,7 @@ _STATUS_PATTERN = re.compile(
 _SEMESTER_PATTERN = re.compile(r"^(\d)\.\s*Semestre de\s*(\d{4})$", re.IGNORECASE)
 _GRADE_PATTERN = re.compile(r"^(\d{1,2},\d{2}|\*{3,})$")
 _DISCIPLINE_START = re.compile(r"^([A-Z][A-Z0-9]{2,})\s+(.+)$")
+_ADAPTATION_PREFIX_PATTERN = re.compile(r"Aproveitamento\s+por\s*$", re.IGNORECASE)
 _CATEGORY_TITLES = {
     "DISCIPLINAS COMPLEMENTARES DE GRADUACAO",
     "DISCIPLINAS DE OUTROS CURSOS",
@@ -196,10 +198,24 @@ class PdfUfsmHistoricoProvider:
                 if parsed is not None:
                     finish_pending()
                     pending = parsed
+                    if _normalized(pending.situacao) == "APROVEITAMENTO POR ADAPTACAO":
+                        finish_pending()
                     continue
 
                 if pending is None:
                     continue
+                if _normalized(pending.situacao) == "APROVEITAMENTO POR":
+                    adaptation_index = normalized.find("ADAPTACAO")
+                    if adaptation_index >= 0:
+                        name_continuation = _compact(line[:adaptation_index])
+                        if name_continuation:
+                            pending.nome = f"{pending.nome} {name_continuation}"
+                        pending.situacao = "Aproveitamento por Adaptação"
+                        tail = _compact(line[adaptation_index + len("ADAPTACAO") :])
+                        if tail and _GRADE_PATTERN.fullmatch(tail):
+                            pending.media = _decimal(tail)
+                        finish_pending()
+                        continue
                 if line.lower().startswith("docente "):
                     pending.professores.append(_compact(line[8:]))
                     pending.teacher_mode = True
@@ -229,15 +245,18 @@ class PdfUfsmHistoricoProvider:
         if not start:
             return None
         status_match = _STATUS_PATTERN.search(start.group(2))
-        if not status_match:
+        adaptation_prefix = _ADAPTATION_PREFIX_PATTERN.search(start.group(2))
+        if not status_match and not adaptation_prefix:
             return None
 
-        before_status = _compact(start.group(2)[: status_match.start()])
+        match_start = status_match.start() if status_match else adaptation_prefix.start()
+        before_status = _compact(start.group(2)[:match_start])
         prefix = re.match(r"^(.*?)\s+(\d{1,3})\s+(\d{1,2})$", before_status)
         if not prefix:
             return None
 
-        tail = _compact(start.group(2)[status_match.end() :])
+        match_end = status_match.end() if status_match else adaptation_prefix.end()
+        tail = _compact(start.group(2)[match_end:])
         grade: float | None = None
         dispensa: str | None = None
         if tail:
@@ -252,7 +271,7 @@ class PdfUfsmHistoricoProvider:
             nome=prefix.group(1),
             carga_horaria=int(prefix.group(2)),
             creditos=int(prefix.group(3)),
-            situacao=status_match.group(1),
+            situacao=(status_match.group(1) if status_match else "Aproveitamento por"),
             ano=current_semester[0],
             semestre=current_semester[1],
             media=grade,

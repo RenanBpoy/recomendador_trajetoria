@@ -36,7 +36,7 @@ function cacheKey(ano, semestre) {
   const auth = getStoredAuth()
   const user = auth?.usuario?.id || auth?.perfil?.id || 'sem-usuario'
   const curriculum = auth?.perfil?.ppc_id || 'sem-ppc'
-  return `${user}:recommendation:v2:${curriculum}:${ano || 'atual'}:${semestre || 'atual'}`
+  return `${user}:recommendation:v3:${curriculum}:${ano || 'atual'}:${semestre || 'atual'}`
 }
 
 export function invalidateRecommendationCache() {

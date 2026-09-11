@@ -675,7 +675,10 @@ class RecomendacaoService:
         if item is None:
             return False
         status = cls._normalized_text(item.situacao_final)
-        return "aprovado" in status or "dispensado" in status
+        return any(
+            marker in status
+            for marker in ("aprovado", "dispensado", "dispensa", "aproveitamento")
+        )
 
     @staticmethod
     def _history_order_key(item: ItemHistoricoEscolar) -> tuple[int, int, int]:
