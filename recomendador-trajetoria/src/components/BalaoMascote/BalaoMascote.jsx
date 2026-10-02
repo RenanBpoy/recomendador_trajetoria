@@ -52,8 +52,8 @@ function BalaoMascote({
     whileElementsMounted: autoUpdate,
     middleware: [
       offset(32),
-      flip({ padding: 12, fallbackAxisSideDirection: 'start' }),
-      shift({ padding: 24 }),
+      flip({ boundary: document.getElementById('app-viewport') || 'clippingAncestors', padding: 12, fallbackAxisSideDirection: 'start' }),
+      shift({ boundary: document.getElementById('app-viewport') || 'clippingAncestors', padding: 24 }),
       arrow({ element: arrowElement, padding: 34 }),
       hide({ strategy: 'referenceHidden' }),
     ],

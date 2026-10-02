@@ -41,6 +41,7 @@ class SupabaseAuthProvider:
     async def signup(self, command: SignupCommand) -> SignupResult:
         payload = await self._post(
             "/signup",
+            params={"redirect_to": command.email_redirect_to} if command.email_redirect_to else None,
             json={
                 "email": command.email,
                 "password": command.senha,

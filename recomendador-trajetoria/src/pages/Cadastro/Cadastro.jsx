@@ -30,6 +30,14 @@ function Cadastro() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [birthdate, setBirthdate] = useState('')
+
+  function handleBirthdateChange(event) {
+    const raw = event.target.value
+    const isoDate = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    const digits = (isoDate ? `${isoDate[3]}${isoDate[2]}${isoDate[1]}` : raw.replace(/\D/g, '')).slice(0, 8)
+    setBirthdate([digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)].filter(Boolean).join('/'))
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -88,7 +96,7 @@ function Cadastro() {
         <FormField label="Matrícula" name="registration" placeholder="Ex.: 202312345" inputMode="numeric" required />
         <FormField label="E-mail" name="email" type="email" placeholder="seuemail@universidade.br" autoComplete="email" required />
         <div className="cadastro-form__row">
-          <FormField label="Data de nascimento" name="birthdate" placeholder="dd/mm/aaaa" icon={CalendarDays} autoComplete="bday" inputMode="numeric" required />
+          <FormField label="Data de nascimento" name="birthdate" placeholder="dd/mm/aaaa" icon={CalendarDays} autoComplete="bday" inputMode="numeric" value={birthdate} onChange={handleBirthdateChange} maxLength={10} required />
           <label className="select-field">
             <span>Curso</span>
             <select name="course" defaultValue="" required>

@@ -1,13 +1,15 @@
 .loading-screen {
   position: fixed;
-  inset: 0;
+  inset: var(--app-frame-inset) 0;
   z-index: 30000;
   width: min(100%, 430px);
-  min-height: 100dvh;
+  height: calc(100dvh - 2 * var(--app-frame-inset));
   margin: 0 auto;
   display: grid;
-  place-items: center;
-  overflow: hidden;
+  place-items: safe center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px 0;
   color: var(--text);
   background:
     radial-gradient(circle at 16% 18%, rgba(36, 200, 223, 0.14), transparent 40%),
@@ -149,7 +151,6 @@
 @media (min-width: 700px) {
   .loading-screen {
     inset: 16px 0;
-    min-height: calc(100dvh - 32px);
     border-radius: 28px;
   }
 }
@@ -160,7 +161,7 @@
 }
 
 @media (max-height: 650px) {
-  .loading-screen__content { gap: 14px; }
+  .loading-screen__content { gap: 14px; transform: none; }
   .loading-screen__intro > span { margin-bottom: 8px; }
   .loading-screen__intro p { margin-top: 7px; }
   .loading-screen__mascot { width: min(39vh, 180px); margin: 4px 0 6px; }

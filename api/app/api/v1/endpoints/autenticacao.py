@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, status
 
-from app.dependencies.auth import AuthServiceDep
+from app.dependencies.auth import AppSettings, AuthServiceDep
 from app.domain.entities import SignupCommand
 from app.schemas.auth import LoginOut, LoginRequest, SignupOut, SignupRequest
 from app.schemas.common import ApiResponse, ErrorResponse, response_meta
@@ -25,6 +25,7 @@ async def signup(
     body: SignupRequest,
     request: Request,
     service: AuthServiceDep,
+    settings: AppSettings,
 ) -> ApiResponse[SignupOut]:
     result = await service.signup(
         SignupCommand(
@@ -34,6 +35,7 @@ async def signup(
             data_nascimento=body.data_nascimento,
             curso_codigo=body.curso_codigo,
             senha=body.senha,
+            email_redirect_to=settings.email_confirmation_url(request.headers.get("origin")),
         )
     )
     return ApiResponse(data=SignupOut.model_validate(result), meta=response_meta(request))

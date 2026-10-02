@@ -5,12 +5,26 @@ import sleepingMascot from '../../assets/img/salomao-sleeping.png'
 
 const size = 120
 const sleepDelay = 60_000
+function viewportBounds() {
+  const width = Math.min(window.innerWidth, 430)
+  const inset = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--app-frame-inset')) || 0
+  const left = (window.innerWidth - width) / 2
+  return document.getElementById('app-viewport')?.getBoundingClientRect()
+    || { left, top: inset, right: left + width, bottom: window.innerHeight - inset }
+}
 function constrain(x, y) {
-  return { x: Math.max(8, Math.min(x, window.innerWidth - size - 8)), y: Math.max(8, Math.min(y, window.innerHeight - size - 8)) }
+  const bounds = viewportBounds()
+  return {
+    x: Math.max(bounds.left + 8, Math.min(x, bounds.right - size - 8)),
+    y: Math.max(bounds.top + 8, Math.min(y, bounds.bottom - size - 8)),
+  }
 }
 
 export default function MinimizedGuide({ onResume, checking, error, label = 'Retomar guia. Segure e arraste para mover.', buttonRef }) {
-  const [position, setPosition] = useState(() => constrain(window.innerWidth - size - 16, window.innerHeight - size - 94))
+  const [position, setPosition] = useState(() => {
+    const bounds = viewportBounds()
+    return constrain(bounds.right - size - 16, bounds.bottom - size - 94)
+  })
   const [sleeping, setSleeping] = useState(false)
   const drag = useRef(null)
   const suppressClick = useRef(false)
@@ -25,7 +39,11 @@ export default function MinimizedGuide({ onResume, checking, error, label = 'Ret
   useEffect(() => {
     const resize = () => setPosition((current) => constrain(current.x, current.y))
     window.addEventListener('resize', resize)
-    return () => window.removeEventListener('resize', resize)
+    window.visualViewport?.addEventListener('resize', resize)
+    return () => {
+      window.removeEventListener('resize', resize)
+      window.visualViewport?.removeEventListener('resize', resize)
+    }
   }, [])
 
   useEffect(() => {

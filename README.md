@@ -81,6 +81,17 @@ VITE_API_URL=http://localhost:8000/api/v1
 
 O endereço padrão do Vite é `http://localhost:5173`.
 
+## Confirmação de e-mail em produção
+
+No Render, configure `FRONTEND_URL=https://recomendador-trajetoria.vercel.app` e inclua `https://recomendador-trajetoria.vercel.app` em `CORS_ORIGINS` (separado por vírgula dos endereços locais).
+
+Em Supabase > Authentication > URL Configuration:
+
+- Site URL: `https://recomendador-trajetoria.vercel.app`
+- Redirect URLs: `https://recomendador-trajetoria.vercel.app/login` e `http://localhost:5173/login`.
+
+A API envia o parâmetro `redirect_to` ao Supabase no cadastro. A origem precisa ser uma das origens configuradas; sem uma origem reconhecida, o retorno usa `FRONTEND_URL`. O link de confirmação do template de e-mail deve usar `{{ .ConfirmationURL }}` para preservar esse retorno. Links enviados antes da correção podem manter o destino antigo.
+
 ## Organização da API
 
 A API utiliza arquitetura em camadas. Os endpoints chamam os services, que acessam o contrato `AcademicDataProvider`. A implementação atual combina o `PostgresAcademicDataProvider`, responsável pelo banco acadêmico, com a fonte de históricos importados. O `PdfUfsmHistoricoProvider` adapta o documento da UFSM para o formato interno da aplicação. Essa separação permite adicionar outra fonte acadêmica no futuro sem alterar os endpoints.

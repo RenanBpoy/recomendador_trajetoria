@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -16,6 +17,7 @@ class Settings(BaseSettings):
     app_name: str = "API do Recomendador de Trajetória"
     api_prefix: str = "/api/v1"
     cors_origins: str = "http://localhost:5173"
+    frontend_url: str = "https://recomendador-trajetoria.vercel.app"
 
     database_url: SecretStr | None = None
     database_pool_mode: Literal["direct", "transaction"] = "transaction"
@@ -29,6 +31,14 @@ class Settings(BaseSettings):
     @property
     def allowed_origins(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    def email_confirmation_url(self, origin: str | None) -> str:
+        frontend = self.frontend_url.rstrip("/")
+        parsed = urlsplit(frontend)
+        frontend_origin = f"{parsed.scheme}://{parsed.netloc}"
+        allowed = {value.rstrip("/") for value in self.allowed_origins}
+        allowed.add(frontend_origin)
+        return f"{origin if origin in allowed else frontend_origin}/login"
 
     def require_database_url(self) -> str:
         if self.database_url is None:

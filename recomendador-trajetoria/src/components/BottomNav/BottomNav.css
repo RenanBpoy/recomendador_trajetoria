@@ -2,7 +2,7 @@
   position: fixed;
   z-index: 10;
   left: 50%;
-  bottom: 0;
+  bottom: var(--app-frame-inset);
   width: min(100vw, 430px);
   height: calc(70px + env(safe-area-inset-bottom));
   min-height: calc(70px + env(safe-area-inset-bottom));

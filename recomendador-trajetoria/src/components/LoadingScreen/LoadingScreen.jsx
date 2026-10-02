@@ -51,6 +51,19 @@ function LoadingScreen() {
     getLoadingSnapshot,
     getLoadingSnapshot,
   )
+  useEffect(() => {
+    if (!loading.visible) return undefined
+    const scrollArea = document.querySelector('.app-viewport__scroll')
+    if (!scrollArea) return undefined
+    const previousOverflow = scrollArea.style.overflowY
+    const previousInert = scrollArea.inert
+    scrollArea.style.overflowY = 'hidden'
+    scrollArea.inert = true
+    return () => {
+      scrollArea.style.overflowY = previousOverflow
+      scrollArea.inert = previousInert
+    }
+  }, [loading.visible])
   if (!loading.visible) return null
 
   return (

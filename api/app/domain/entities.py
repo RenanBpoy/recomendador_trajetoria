@@ -253,6 +253,7 @@ class SignupCommand:
     data_nascimento: date
     curso_codigo: str
     senha: str
+    email_redirect_to: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
