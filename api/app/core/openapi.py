@@ -152,7 +152,7 @@ PLAN_ITEM = {
 QUESTIONNAIRE = {
     "id": 1,
     "codigo": "PERFIL_ACADEMICO",
-    "versao": 1,
+    "versao": 3,
     "titulo": "Perfil acadêmico",
     "descricao": "Afirmações pessoais usadas como contexto da recomendação.",
     "escala_minima": 1,
@@ -160,19 +160,20 @@ QUESTIONNAIRE = {
     "secoes": [
         {
             "id": 1,
-            "codigo": "ROTINA",
+            "codigo": "DISPONIBILIDADE_CONTEXTO",
             "ordem": 1,
-            "titulo": "Rotina e contexto acadêmico",
-            "descricao": "Disponibilidade e organização semanal.",
-            "orientacao": "Responda de 1 a 10.",
+            "titulo": "Disponibilidade e contexto",
+            "descricao": "Como os estudos se encaixam na rotina atual.",
+            "orientacao": "Considere sua rotina atual.",
             "perguntas": [
                 {
                     "id": 1,
-                    "codigo": "TEMPO_ESTUDO",
+                    "codigo": "CONTEXTO_TEMPO_ESTUDO",
                     "ordem_global": 1,
                     "ordem_secao": 1,
-                    "texto": "Consigo reservar tempo durante a semana para estudar fora das aulas.",
-                    "peso_recomendacao": 0.18,
+                    "texto": "Na minha rotina atual, tenho tempo disponível para estudar fora dos horários de aula.",
+                    "peso_recomendacao": 1.4,
+                    "resposta_invertida": False,
                     "resposta": 8,
                 }
             ],
@@ -181,7 +182,7 @@ QUESTIONNAIRE = {
     "preenchimento": {
         "id": "c5727d6e-2217-407d-a3a6-ce19381019e1",
         "status": "EM_ANDAMENTO",
-        "total_perguntas": 8,
+        "total_perguntas": 9,
         "total_respondidas": 1,
         "atualizado_em": "2026-08-29T14:20:00Z",
         "concluido_em": None,

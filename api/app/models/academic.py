@@ -297,6 +297,9 @@ class QuestionarioPerguntaModel(Base):
     peso_recomendacao: Mapped[float] = mapped_column(
         Numeric(4, 2), nullable=False, server_default="1.00"
     )
+    resposta_invertida: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
     ativa: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
 

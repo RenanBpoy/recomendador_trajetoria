@@ -16,14 +16,15 @@ obrigatória aprovada. Uma pendência isolada, portanto, não impede o avanço.
 
 Pesos iniciais do questionário
 ------------------------------
-0,8  desempenho em dois turnos
-1,5  tempo de estudo extraclasse
-1,5  responsabilidades permitem várias disciplinas
-1,2  tolerância a semanas intensas
-1,0  estudo independente
-0,8  busca por ajuda
-1,2  antecedência e prazos
-1,0  persistência
+1,4  tempo disponível para estudo extraclasse
+1,4  responsabilidades permitem várias disciplinas
+0,8  manutenção do ritmo em dois turnos
+1,2  regulação do esforço em semanas intensas
+1,0  constância quando há poucas cobranças
+1,2  concentração de tarefas perto do prazo (pontuação invertida)
+1,2  reorganização após interrupções
+1,0  persistência diante de atividades difíceis
+0,8  busca adaptativa por apoio
 
 Os pesos persistidos em ``questionario_pergunta.peso_recomendacao`` são a
 fonte efetivamente usada no cálculo. As respostas são normalizadas entre 0 e 1
@@ -84,14 +85,15 @@ REGRA_SEMESTRE_CURRICULAR = (
 )
 
 PESOS_INICIAIS_QUESTIONARIO = {
-    "ROTINA_DESEMPENHO_DOIS_TURNOS": 0.8,
-    "ROTINA_TEMPO_ESTUDO_EXTRACLASSE": 1.5,
-    "ROTINA_RESPONSABILIDADES_CARGA": 1.5,
-    "ROTINA_SEMANAS_INTENSAS": 1.2,
-    "FORMACAO_ESTUDO_INDEPENDENTE": 1.0,
-    "MOTIVACAO_BUSCA_AJUDA": 0.8,
-    "MOTIVACAO_ANTECEDENCIA_PRAZOS": 1.2,
-    "MOTIVACAO_PERSISTENCIA": 1.0,
+    "CONTEXTO_TEMPO_ESTUDO": 1.4,
+    "CONTEXTO_RESPONSABILIDADES_CARGA": 1.4,
+    "CONTEXTO_RITMO_DOIS_TURNOS": 0.8,
+    "AUTORREGULACAO_SEMANAS_INTENSAS": 1.2,
+    "AUTORREGULACAO_POUCAS_COBRANCAS": 1.0,
+    "AUTORREGULACAO_PROXIMIDADE_PRAZOS": 1.2,
+    "AUTORREGULACAO_REORGANIZACAO": 1.2,
+    "ESFORCO_PERSISTENCIA": 1.0,
+    "ESFORCO_BUSCA_APOIO": 0.8,
 }
 
 LIMITE_BASE_HORAS_SEMANAIS = 16.0
@@ -724,6 +726,8 @@ class RecomendacaoService:
                     normalized_answer = (
                         question.resposta - questionnaire.escala_minima
                     ) / scale_range
+                    if question.resposta_invertida:
+                        normalized_answer = 1.0 - normalized_answer
                     contribution = round(normalized_answer * weight, 4)
                     weighted_sum += contribution
                     total_weight += weight

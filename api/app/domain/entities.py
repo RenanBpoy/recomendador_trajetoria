@@ -310,6 +310,7 @@ class QuestionarioPergunta:
     ordem_secao: int
     texto: str
     peso_recomendacao: float = 1.0
+    resposta_invertida: bool = False
     resposta: int | None = None
 
 

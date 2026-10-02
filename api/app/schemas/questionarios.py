@@ -23,6 +23,7 @@ class QuestionarioPerguntaOut(BaseModel):
     ordem_secao: int
     texto: str
     peso_recomendacao: float
+    resposta_invertida: bool
     resposta: int | None = None
 
 

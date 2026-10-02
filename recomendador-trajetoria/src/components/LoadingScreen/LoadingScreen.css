@@ -54,7 +54,7 @@
 }
 
 .loading-screen__mascot {
-  width: min(52vw, 205px);
+  width: min(52vw, 180px);
   height: auto;
   margin: 10px 0 12px;
   display: block;

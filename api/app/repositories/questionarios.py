@@ -84,6 +84,7 @@ class SqlAlchemyQuestionarioRepository:
                     ordem_secao=question.ordem_secao,
                     texto=question.texto,
                     peso_recomendacao=float(question.peso_recomendacao),
+                    resposta_invertida=question.resposta_invertida,
                     resposta=answer,
                 )
             )
