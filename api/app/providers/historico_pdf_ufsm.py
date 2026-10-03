@@ -223,6 +223,12 @@ class PdfUfsmHistoricoProvider:
                 if _GRADE_PATTERN.fullmatch(line):
                     pending.media = _decimal(line)
                     continue
+                # PDF rows can wrap a numeric column together with the grade.
+                # These are not continuations of the discipline's name.
+                wrapped_grade = re.fullmatch(r"\d+\s+(\d{1,2},\d{2}|\*{3,})", line)
+                if wrapped_grade:
+                    pending.media = _decimal(wrapped_grade.group(1))
+                    continue
                 if pending.teacher_mode:
                     if line == line.upper() and len(line) > 3:
                         pending.professores.append(line)
