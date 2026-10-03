@@ -20,17 +20,20 @@ _STATUS = (
     "Aprovado sem nota",
     "Reprovado por frequência",
     "Reprovado por nota",
+    "Reprovado com nota",
     "Trancamento parcial",
     "Cancelamento de matrícula",
     "Não concluída",
     "Incompleto",
     "Matriculado",
+    "Matrícula",
 )
 _STATUS_PATTERN = re.compile(
     "(" + "|".join(re.escape(value) for value in _STATUS) + ")",
     re.IGNORECASE,
 )
 _SEMESTER_PATTERN = re.compile(r"^(\d)\.\s*Semestre de\s*(\d{4})$", re.IGNORECASE)
+_ROW_PERIOD_PATTERN = re.compile(r"\s+(\d{4})\s*/\s*([12])\.\s*Semestre\s*$", re.IGNORECASE)
 _GRADE_PATTERN = re.compile(r"^(\d{1,2},\d{2}|\*{3,})$")
 _DISCIPLINE_START = re.compile(r"^([A-Z][A-Z0-9]{2,})\s+(.+)$")
 _ADAPTATION_PREFIX_PATTERN = re.compile(r"Aproveitamento\s+por\s*$", re.IGNORECASE)
@@ -132,7 +135,8 @@ class PdfUfsmHistoricoProvider:
         items = self._read_items(pages)
         if not items:
             self._invalid(
-                "Nenhuma disciplina foi encontrada. PDFs digitalizados ainda não são suportados."
+                "Nenhuma disciplina foi reconhecida no formato deste histórico. "
+                "Envie o PDF textual completo ou simplificado da UFSM; arquivos digitalizados não são suportados."
             )
 
         issued = re.search(r"Data:\s*(\d{2}/\d{2}/\d{4})", text)
@@ -245,6 +249,12 @@ class PdfUfsmHistoricoProvider:
         current_semester: tuple[int, int] | None,
         current_category: str | None,
     ) -> _PendingItem | None:
+        # Simplified transcripts put the period at the end of each row,
+        # rather than using a semester heading shared by multiple rows.
+        row_period = _ROW_PERIOD_PATTERN.search(line)
+        if row_period:
+            current_semester = (int(row_period.group(1)), int(row_period.group(2)))
+            line = line[:row_period.start()].rstrip()
         if current_semester is None:
             return None
         start = _DISCIPLINE_START.match(line)
@@ -277,7 +287,11 @@ class PdfUfsmHistoricoProvider:
             nome=prefix.group(1),
             carga_horaria=int(prefix.group(2)),
             creditos=int(prefix.group(3)),
-            situacao=(status_match.group(1) if status_match else "Aproveitamento por"),
+            situacao=(
+                {"REPROVADO COM NOTA": "Reprovado por nota", "MATRICULA": "Matriculado"}
+                .get(_normalized(status_match.group(1)), status_match.group(1))
+                if status_match else "Aproveitamento por"
+            ),
             ano=current_semester[0],
             semestre=current_semester[1],
             media=grade,
