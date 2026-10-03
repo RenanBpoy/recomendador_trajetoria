@@ -75,7 +75,8 @@ from app.domain.ports import (
 
 REGRA_MATRICULA = (
     "Os quatro primeiros dígitos da matrícula indicam o ano de ingresso e "
-    "o quinto dígito indica o semestre de ingresso (1 ou 2)."
+    "o quinto dígito indica o semestre de ingresso (1 ou 2). No vestibular, "
+    "há um 5 após o ano e o sexto dígito indica o semestre."
 )
 REGRA_SEMESTRE_CURRICULAR = (
     "O semestre curricular é o primeiro período do PPC com menos de 50% da "
@@ -573,14 +574,15 @@ class RecomendacaoService:
 
     @staticmethod
     def _parse_registration(registration: str) -> tuple[int, int, str]:
-        prefix = registration[:5]
-        if len(prefix) != 5 or not prefix.isdigit() or prefix[4] not in "12":
+        vestibular = len(registration) >= 6 and registration[4] == "5"
+        prefix = registration[:6] if vestibular else registration[:5]
+        if len(prefix) != (6 if vestibular else 5) or not prefix.isdigit() or prefix[-1] not in "12":
             raise ApplicationError(
-                "A matrícula deve começar com quatro dígitos do ano e 1 ou 2 para o semestre.",
+                "A matrícula deve começar com o ano e semestre (1 ou 2), podendo conter 5 antes do semestre para ingresso pelo vestibular.",
                 code="matricula_periodo_invalido",
                 details={"matricula": registration, "regra": REGRA_MATRICULA},
             )
-        return int(prefix[:4]), int(prefix[4]), prefix
+        return int(prefix[:4]), int(prefix[-1]), prefix
 
     @staticmethod
     def _semester_number(

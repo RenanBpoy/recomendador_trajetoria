@@ -84,7 +84,15 @@ class AuthService:
     def _infer_default_curriculum_year(
         *, curso_codigo: str, matricula: str
     ) -> int | None:
-        """Os cinco primeiros dígitos representam ano e semestre de ingresso."""
+        """Ingresso regular: AAAAS; vestibular: AAAA5S (PPC de SI pelo ano)."""
+        if (
+            curso_codigo == "314"
+            and len(matricula) >= 6
+            and matricula[:6].isdigit()
+            and matricula[4] == "5"
+            and matricula[5] in "12"
+        ):
+            return 2026 if int(matricula[:4]) >= 2025 else 2009
         ingresso = matricula[:5]
         if len(ingresso) != 5 or not ingresso.isdigit():
             return None
