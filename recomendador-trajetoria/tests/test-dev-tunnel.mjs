@@ -51,6 +51,20 @@ test('forwarding preserves method, body, API auth, query and upstream status', a
   assert.deepEqual(await result.json(), { error: { code: 'test' } })
 })
 
+test('forwards the browser Origin needed to start UFSM authentication', async (t) => {
+  configure(t)
+  const upstream = t.mock.method(globalThis, 'fetch', async () => Response.json({ data: {} }))
+  const result = await proxy.fetch(new Request(`${preview}/api/v1/autenticacao/ufsm/iniciar`, {
+    method: 'POST',
+    body: '{}',
+    headers: { Origin: preview, 'Content-Type': 'application/json' },
+  }))
+  assert.equal(result.status, 200)
+  const [target, options] = upstream.mock.calls[0].arguments
+  assert.equal(target.href, `${tunnel}/api/v1/autenticacao/ufsm/iniciar`)
+  assert.equal(options.headers.get('Origin'), preview)
+})
+
 test('tunnel login redirects are not passed to the browser', async (t) => {
   configure(t)
   t.mock.method(globalThis, 'fetch', async () => Response.redirect('https://login.example.com'))

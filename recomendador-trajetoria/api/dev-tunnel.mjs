@@ -1,6 +1,6 @@
 const API_PREFIX = '/api/v1/'
 const ROUTE_PARAM = '__salomao_path'
-const REQUEST_HEADERS = ['accept', 'authorization', 'content-type']
+const REQUEST_HEADERS = ['accept', 'authorization', 'content-type', 'origin']
 const RESPONSE_HEADERS = ['content-type', 'retry-after', 'www-authenticate', 'x-request-id']
 
 function error(status, code, message) {
