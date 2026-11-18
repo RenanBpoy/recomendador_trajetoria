@@ -1,6 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/dev-tunnel.mjs": {
+      "maxDuration": 150
+    }
+  },
   "rewrites": [
+    {
+      "source": "/api/v1/:path(.*)",
+      "destination": "/api/dev-tunnel?__salomao_path=:path"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
