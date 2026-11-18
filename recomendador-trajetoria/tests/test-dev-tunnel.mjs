@@ -72,5 +72,22 @@ test('without a tunnel token the proxy returns a configuration error', async (t)
   const upstream = t.mock.method(globalThis, 'fetch')
   const result = await proxy.fetch(new Request(`${preview}/api/v1/status`))
   assert.equal(result.status, 503)
+  assert.equal((await result.json()).error.message, 'Configuração do túnel: DEV_TUNNEL_TOKEN ausente.')
+  assert.equal(upstream.mock.callCount(), 0)
+})
+
+test('configuration failures identify both variables without exposing values', async (t) => {
+  configure(t)
+  const upstream = t.mock.method(globalThis, 'fetch')
+  env.DEV_TUNNEL_URL = `${tunnel}/api/v1`
+  env.DEV_TUNNEL_TOKEN = 'private-token with a label'
+  const result = await proxy.fetch(new Request(`${preview}/api/v1/status`))
+  assert.equal(result.status, 503)
+  assert.deepEqual(await result.json(), {
+    error: {
+      code: 'dev_tunnel_not_configured',
+      message: 'Configuração do túnel: DEV_TUNNEL_TOKEN com formato inválido; DEV_TUNNEL_URL inválida.',
+    },
+  })
   assert.equal(upstream.mock.callCount(), 0)
 })

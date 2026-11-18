@@ -1,5 +1,3 @@
-import { env } from 'node:process'
-
 const API_PREFIX = '/api/v1/'
 const ROUTE_PARAM = '__salomao_path'
 const REQUEST_HEADERS = ['accept', 'authorization', 'content-type']
@@ -14,17 +12,27 @@ function error(status, code, message) {
 
 export default {
   async fetch(request) {
-    const token = env.DEV_TUNNEL_TOKEN?.trim()
+    const tunnelUrl = process.env.DEV_TUNNEL_URL?.trim()
+    const token = process.env.DEV_TUNNEL_TOKEN?.trim()
+    const issues = []
+    if (!tunnelUrl) issues.push('DEV_TUNNEL_URL ausente')
+    if (!token) issues.push('DEV_TUNNEL_TOKEN ausente')
+    else if (!/^[A-Za-z0-9._~+/-]+=*$/.test(token)) issues.push('DEV_TUNNEL_TOKEN com formato inválido')
+
     let origin
-    try {
-      origin = new URL(env.DEV_TUNNEL_URL)
-      if (origin.protocol !== 'https:' || !origin.hostname.endsWith('.devtunnels.ms') ||
-          origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash ||
-          !token) {
-        throw new Error('Invalid tunnel configuration')
+    if (tunnelUrl) {
+      try {
+        origin = new URL(tunnelUrl)
+        if (origin.protocol !== 'https:' || !origin.hostname.endsWith('.devtunnels.ms') ||
+            origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash) {
+          issues.push('DEV_TUNNEL_URL inválida')
+        }
+      } catch {
+        issues.push('DEV_TUNNEL_URL inválida')
       }
-    } catch {
-      return error(503, 'dev_tunnel_not_configured', 'O túnel privado deste ambiente ainda não está configurado.')
+    }
+    if (issues.length) {
+      return error(503, 'dev_tunnel_not_configured', `Configuração do túnel: ${issues.join('; ')}.`)
     }
 
     const incoming = new URL(request.url)
