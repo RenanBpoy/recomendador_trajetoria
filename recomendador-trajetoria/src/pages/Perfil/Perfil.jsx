@@ -7,7 +7,7 @@ import MetricStrip from '../../components/MetricStrip/MetricStrip'
 import { useAcademicProgress } from '../../hooks/useAcademicProgress'
 import { listCourseCurricula } from '../../services/academic'
 import {
-  clearAuthSession,
+  signOut,
   updateStoredProfile,
 } from '../../services/auth'
 import { saveSelectedCurriculum } from '../../services/profile'
@@ -72,8 +72,8 @@ function Perfil() {
     }
   }
 
-  function handleLogout() {
-    clearAuthSession()
+  async function handleLogout() {
+    await signOut().catch(() => {})
     navigate('/login', { replace: true })
   }
 

@@ -57,6 +57,7 @@ function recommendationItems(recommendation) {
       observacoes: [
         discipline.oferta_disciplina_codigo || discipline.disciplina_codigo,
         `Turma ${discipline.codigo_turma}`,
+        discipline.oferta_id_institucional ? `Oferta ${discipline.oferta_id_institucional}` : null,
         schedule.sala,
       ].filter(Boolean).join(' · '),
     }))

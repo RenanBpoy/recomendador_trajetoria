@@ -1,3 +1,4 @@
+import { academicPeriodCacheKey } from '../utils/academicPeriod'
 import { apiDelete, apiGet, apiPatch, apiPut, apiUpload } from './api'
 import { getAccessToken, getStoredAuth } from './auth'
 import { cachedSessionRequest, invalidateSessionCache } from './sessionCache'
@@ -11,10 +12,10 @@ function academicScope() {
   return `${auth?.usuario?.id || auth?.perfil?.id || 'sem-usuario'}:academic:`
 }
 
-function cachedAcademicGet(key, path, { ttlMs = STUDENT_TTL, force = false } = {}) {
+function cachedAcademicGet(key, path, { ttlMs = STUDENT_TTL, force = false, showLoading = true } = {}) {
   return cachedSessionRequest(
     `${academicScope()}${key}`,
-    () => apiGet(path, getAccessToken()),
+    () => apiGet(path, getAccessToken(), { showLoading }),
     { ttlMs, force },
   )
 }
@@ -22,6 +23,40 @@ function cachedAcademicGet(key, path, { ttlMs = STUDENT_TTL, force = false } = {
 export function invalidateAcademicCache() {
   invalidateSessionCache(academicScope())
   invalidateRecommendationCache()
+}
+
+export function getOfficialGrade(options = {}) {
+  return cachedAcademicGet('ufsm:grade', '/autenticacao/ufsm/grade', options)
+}
+
+export function isInstitutionalSession(auth) {
+  return Boolean(auth?.sessao?.access_token?.startsWith('ufsm_'))
+}
+
+function planSlotQuery(slot) {
+  return new URLSearchParams({
+    dia_semana: slot.dia_semana,
+    hora_inicio: slot.hora_inicio,
+    hora_fim: slot.hora_fim,
+  })
+}
+
+export function listOtherPlanCourses() {
+  return cachedAcademicGet(
+    'ufsm:plano:catalogo-cursos',
+    '/autenticacao/ufsm/plano/cursos',
+    { showLoading: false, ttlMs: CATALOG_TTL },
+  )
+}
+
+export function listInstitutionalPlanOfferings(slot, course) {
+  const query = planSlotQuery(slot)
+  if (course) query.set('curso_codigo', course)
+  return cachedAcademicGet(
+    `ufsm:plano:ofertas:${academicPeriodCacheKey()}:${query}`,
+    `/autenticacao/ufsm/plano/ofertas?${query}`,
+    { ttlMs: 300000, showLoading: false },
+  )
 }
 
 export function listCourseCurricula(courseCode, options = {}) {

@@ -64,11 +64,16 @@ class ConflictError(ApplicationError):
 
 
 class RateLimitError(ApplicationError):
-    def __init__(self, message: str = "Muitas tentativas. Tente novamente mais tarde.") -> None:
+    def __init__(
+        self, message: str = "Muitas tentativas. Tente novamente mais tarde.",
+        *, retry_after: int | None = None,
+    ) -> None:
+        self.retry_after = retry_after
         super().__init__(
             message,
             code="rate_limit_exceeded",
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            details={"retry_after": retry_after} if retry_after is not None else None,
         )
 
 
@@ -86,9 +91,14 @@ def _error_payload(request: Request, code: str, message: str, details: Any = Non
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(ApplicationError)
     async def handle_application_error(request: Request, exc: ApplicationError) -> JSONResponse:
+        headers = (
+            {"Retry-After": str(exc.retry_after)}
+            if isinstance(exc, RateLimitError) and exc.retry_after is not None else None
+        )
         return JSONResponse(
             status_code=exc.status_code,
             content=_error_payload(request, exc.code, exc.message, exc.details),
+            headers=headers,
         )
 
     @app.exception_handler(RequestValidationError)
@@ -99,7 +109,10 @@ def register_exception_handlers(app: FastAPI) -> None:
                 request,
                 "validation_error",
                 "Parâmetros inválidos.",
-                jsonable_encoder(exc.errors()),
+                jsonable_encoder([
+                    {k: v for k, v in error.items() if k not in {"input", "ctx"}}
+                    for error in exc.errors()
+                ]),
             ),
         )
 

@@ -8,11 +8,12 @@ from app.core.config import Settings, get_settings
 from app.core.database import get_db_session
 from app.domain.ports import AuthProvider, AvatarStorageProvider
 from app.domain.entities import AuthUser, UserProfile
-from app.core.errors import AuthenticationError, ResourceNotFoundError
+from app.core.errors import ApplicationError, AuthenticationError, ResourceNotFoundError
 from app.providers.supabase_auth import SupabaseAuthProvider
 from app.providers.supabase_storage import SupabaseStorageProvider
 from app.repositories.users import SqlAlchemyUserRegistrationRepository
 from app.services.auth import AuthService, PerfilService
+from app.services.ufsm_auth import LOCAL_PREFIX, UfsmAuthService
 
 DatabaseSession = Annotated[AsyncSession, Depends(get_db_session)]
 AppSettings = Annotated[Settings, Depends(get_settings)]
@@ -51,9 +52,13 @@ CurrentAuthUser = Annotated[AuthUser, Depends(get_current_user)]
 
 
 async def get_current_profile(
-    user: CurrentAuthUser,
+    access_token: CurrentAccessToken,
     session: DatabaseSession,
+    settings: AppSettings,
 ) -> UserProfile:
+    if access_token.startswith(LOCAL_PREFIX):
+        return await UfsmAuthService(settings, session).profile(access_token)
+    user = await get_auth_provider(settings).get_user(access_token)
     profile = await SqlAlchemyUserRegistrationRepository(session).get_profile(user.id)
     if profile is None:
         raise ResourceNotFoundError("Perfil do usuário", user.id)
@@ -61,6 +66,14 @@ async def get_current_profile(
 
 
 CurrentProfileDep = Annotated[UserProfile, Depends(get_current_profile)]
+
+
+def require_legacy_profile_features(access_token: CurrentAccessToken) -> None:
+    if access_token.startswith(LOCAL_PREFIX):
+        raise ApplicationError(
+            "Esta operação não está disponível para o perfil institucional nesta versão.",
+            code="ufsm_operacao_indisponivel", status_code=403,
+        )
 
 
 def get_auth_service(

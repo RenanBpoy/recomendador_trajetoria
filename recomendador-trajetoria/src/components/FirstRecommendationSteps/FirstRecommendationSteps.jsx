@@ -25,7 +25,7 @@ function CurrentStep({ number, title, description, duration, action, to, guideRe
         <span className="recommendation-step__eyebrow">ETAPA ATUAL</span>
         <h3>{title}</h3>
         <p>{description}</p>
-        <small className="recommendation-step__duration"><Clock3 size={12} />{duration}</small>
+        {duration && <small className="recommendation-step__duration"><Clock3 size={12} />{duration}</small>}
         {to ? (
           <Link ref={guideRef} className="recommendation-step__action" to={to} onClick={onGuideAction}>{actionContent}</Link>
         ) : (
@@ -40,6 +40,7 @@ function CurrentStep({ number, title, description, duration, action, to, guideRe
 
 function FirstRecommendationSteps({
   historyLoaded = false,
+  institutional = false,
   checkingHistory = false,
   questionnaireCompleted = false,
   checkingQuestionnaire = false,
@@ -85,8 +86,8 @@ function FirstRecommendationSteps({
           >
             <StepMarker number={1} completed />
             <div className="recommendation-step__content">
-              <h3>Histórico acadêmico enviado</h3>
-              <p>Seu arquivo já está pronto para análise.</p>
+              <h3>{institutional ? 'Histórico acadêmico da UFSM' : 'Histórico acadêmico enviado'}</h3>
+              <p>{institutional ? 'Recebido automaticamente. Confira na grade.' : 'Seu arquivo já está pronto para análise.'}</p>
             </div>
             <strong>Concluído</strong>
           </Link>
@@ -94,10 +95,10 @@ function FirstRecommendationSteps({
           <CurrentStep
             guideRef={historyGuideRef}
             number={1}
-            title="Envie seu histórico acadêmico"
-            description="Precisamos dele para identificar as disciplinas concluídas e pendentes."
-            duration="Leva cerca de 1 minuto"
-            action="Carregar histórico"
+            title={institutional ? 'Histórico acadêmico da UFSM' : 'Envie seu histórico acadêmico'}
+            description={institutional ? 'Os dados são consultados ao entrar. Não é necessário enviar um PDF.' : 'Precisamos dele para identificar as disciplinas concluídas e pendentes.'}
+            duration={institutional ? undefined : 'Leva cerca de 1 minuto'}
+            action={institutional ? 'Ver grade' : 'Carregar histórico'}
             to="/grade"
             onGuideAction={() => completeGuideAction('open-history')}
           />
@@ -117,7 +118,7 @@ function FirstRecommendationSteps({
             </div>
             <strong>Concluído</strong>
           </Link>
-        ) : historyLoaded ? (
+        ) : (historyLoaded || institutional) ? (
           <CurrentStep
             guideRef={questionnaireGuideRef}
             number={2}
@@ -153,7 +154,7 @@ function FirstRecommendationSteps({
             </div>
             <strong>Concluído</strong>
           </Link>
-        ) : historyLoaded && questionnaireCompleted ? (
+        ) : (historyLoaded || institutional) && questionnaireCompleted ? (
           <CurrentStep
             guideRef={planGuideRef}
             number={3}

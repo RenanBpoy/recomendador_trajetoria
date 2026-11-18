@@ -1,3 +1,4 @@
+import { academicPeriodCacheKey } from '../utils/academicPeriod'
 import { apiGet } from './api'
 import { getAccessToken, getStoredAuth } from './auth'
 import { cachedSessionRequest, invalidateSessionCache } from './sessionCache'
@@ -36,7 +37,8 @@ function cacheKey(ano, semestre) {
   const auth = getStoredAuth()
   const user = auth?.usuario?.id || auth?.perfil?.id || 'sem-usuario'
   const curriculum = auth?.perfil?.ppc_id || 'sem-ppc'
-  return `${user}:recommendation:v3:${curriculum}:${ano || 'atual'}:${semestre || 'atual'}`
+  const period = ano && semestre ? `${ano}/${semestre}` : `atual:${academicPeriodCacheKey()}`
+  return `${user}:recommendation:v3:${curriculum}:${period}`
 }
 
 export function invalidateRecommendationCache() {

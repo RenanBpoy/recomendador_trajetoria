@@ -26,12 +26,13 @@ function CurriculumPanel({ components, history, manualMappings, loading, onSelec
     [components, history, manualMappings],
   )
   const semesters = useMemo(
-    () => [...new Set(progress.map((item) => item.semestre_recomendado))].sort((a, b) => a - b),
+    () => [...new Set(progress.map((item) => item.semestre_recomendado ?? null))].sort((a, b) => (a ?? Infinity) - (b ?? Infinity)),
     [progress],
   )
   const normalizedSearch = search.trim().toLocaleLowerCase('pt-BR')
+  const selectedSemester = semesters.includes(activeSemester) ? activeSemester : semesters[0]
   const visibleComponents = progress.filter((component) => {
-    if (component.semestre_recomendado !== activeSemester) return false
+    if ((component.semestre_recomendado ?? null) !== selectedSemester) return false
     if (!normalizedSearch) return true
     const searchable = [
       component.disciplina_codigo,
@@ -58,13 +59,13 @@ function CurriculumPanel({ components, history, manualMappings, loading, onSelec
       <div className="semester-tabs" aria-label="Semestres">
         {semesters.map((semester) => (
           <button
-            key={semester}
+            key={semester ?? 'complementares'}
             type="button"
-            className={semester === activeSemester ? 'is-active' : ''}
-            aria-pressed={semester === activeSemester}
+            className={semester === selectedSemester ? 'is-active' : ''}
+            aria-pressed={semester === selectedSemester}
             onClick={() => setActiveSemester(semester)}
           >
-            {semester}º
+            {semester === null ? 'Outros' : `${semester}º`}
           </button>
         ))}
       </div>
@@ -91,7 +92,7 @@ function CurriculumPanel({ components, history, manualMappings, loading, onSelec
 
       <section className="course-list">
         <header>
-          <strong>▤ &nbsp;{activeSemester}º semestre</strong>
+          <strong>▤ &nbsp;{selectedSemester === null ? 'Componentes sem semestre definido' : `${selectedSemester}º semestre`}</strong>
           <span>{visibleComponents.length} componentes</span>
         </header>
         <div className="course-list__items">
@@ -107,12 +108,12 @@ function CurriculumPanel({ components, history, manualMappings, loading, onSelec
             const details = [
               manual ? latest.disciplina_codigo_origem : component.disciplina_codigo,
               `${component.carga_horaria} h`,
-              latest ? `última tentativa ${latest.ano}/${latest.semestre}` : null,
+              latest?.ano ? `última tentativa ${latest.ano}${latest.semestre ? `/${latest.semestre}` : ''}` : null,
               imported && latest.disciplina_codigo_origem !== component.disciplina_codigo
                 ? `código original ${latest.disciplina_codigo_origem}`
                 : null,
             ].filter(Boolean).join(' • ')
-            const clickable = component.estado_academico.key === 'pending' || manual
+            const clickable = Boolean(onSelectEquivalence) && (component.estado_academico.key === 'pending' || manual)
 
             return (
               <button
@@ -129,6 +130,7 @@ function CurriculumPanel({ components, history, manualMappings, loading, onSelec
                   <small>{details}</small>
                   {imported && <em>Histórico enviado pelo estudante</em>}
                   {manual && <em>Equivalência escolhida pelo estudante</em>}
+                  {latest?.equivalencia_oficial && <em>Equivalência UFSM · {latest.disciplina_codigo}</em>}
                 </span>
                 <span className={`course-row__status course-row__status--${visual.tone}`}>{component.estado_academico.label}</span>
                 {clickable && <span className="course-row__arrow">›</span>}

@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Login from './pages/Login/Login'
+import UfsmCallback from './pages/Login/UfsmCallback'
 import Cadastro from './pages/Cadastro/Cadastro'
 import Home from './pages/Home/Home'
 import Grade from './pages/Grade/Grade'
@@ -30,6 +31,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/auth/callback" element={<UfsmCallback />} />
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/home" element={protectedPage(<Home />)} />
           <Route path="/grade" element={protectedPage(<Grade />)} />

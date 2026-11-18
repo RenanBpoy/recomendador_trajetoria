@@ -109,6 +109,7 @@ class OfertaTurma:
     fonte_dados: str = "DIARIO_CLASSE"
     fonte_referencia: str | None = None
     horarios: tuple[HorarioOfertaTurma, ...] = ()
+    id_institucional: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,6 +135,7 @@ class ItemHistoricoEscolar:
     disciplina_origem: str | None = None
     metodo_correspondencia: str | None = None
     confianca_correspondencia: float | None = None
+    cumprido_oficial: bool | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -280,6 +282,7 @@ class UserProfile:
     data_nascimento: date | None = None
     avatar_path: str | None = None
     avatar_url: str | None = None
+    disciplinas_cumpridas_oficiais: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)

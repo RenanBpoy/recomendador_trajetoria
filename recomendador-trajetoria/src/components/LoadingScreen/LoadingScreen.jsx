@@ -70,7 +70,7 @@ function LoadingScreen() {
     <div className="loading-screen" role="status" aria-live="polite" aria-label="Estou cuidando disso">
       <div className="loading-screen__content">
         <div className="loading-screen__intro">
-          <span>TCC</span>
+          <span>Salomão</span>
           <h1>Salomão está pensando...</h1>
           <p>Boas escolhas levam um pouquinho de tempo.</p>
         </div>

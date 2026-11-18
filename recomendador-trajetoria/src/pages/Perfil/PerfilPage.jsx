@@ -10,8 +10,8 @@ import ProfileDialog from '../../components/ProfileDialog/ProfileDialog'
 import ProfileGuide from '../../components/ProfileGuide/ProfileGuide'
 import { useAcademicProgress } from '../../hooks/useAcademicProgress'
 import { useStoredAuth } from '../../hooks/useStoredAuth'
-import { listCourseCurricula } from '../../services/academic'
-import { clearAuthSession } from '../../services/auth'
+import { isInstitutionalSession, listCourseCurricula } from '../../services/academic'
+import { signOut } from '../../services/auth'
 import { restartFirstAccessGuide, restartProfileGuide } from '../../services/firstAccessGuide'
 import {
   getCurrentProfile,
@@ -52,6 +52,7 @@ function todayIsoDate() {
 function PerfilPage() {
   const navigate = useNavigate()
   const auth = useStoredAuth()
+  const institutional = isInstitutionalSession(auth)
   const { profile: progressProfile, curriculum, summary, loading } = useAcademicProgress()
   const profile = auth?.perfil || progressProfile
   const [curricula, setCurricula] = useState([])
@@ -85,7 +86,7 @@ function PerfilPage() {
 
   useEffect(() => {
     let active = true
-    if (!profile?.curso_codigo) return () => { active = false }
+    if (institutional || !profile?.curso_codigo) return () => { active = false }
 
     listCourseCurricula(profile.curso_codigo)
       .then((items) => {
@@ -97,7 +98,7 @@ function PerfilPage() {
         if (active) setPpcError(requestError.message || 'Não foi possível carregar os PPCs do curso.')
       })
     return () => { active = false }
-  }, [profile?.curso_codigo, profile?.ppc_id])
+  }, [institutional, profile?.curso_codigo, profile?.ppc_id])
 
   function openPanel(panel) {
     setPanelFeedback('')
@@ -205,8 +206,8 @@ function PerfilPage() {
     }
   }
 
-  function handleLogout() {
-    clearAuthSession()
+  async function handleLogout() {
+    await signOut().catch(() => {})
     navigate('/login', { replace: true })
   }
 
@@ -330,11 +331,13 @@ function PerfilPage() {
       {activePanel === 'academic' && (
         <ProfileDialog title="Dados acadêmicos" subtitle="Esses dados conectam sua conta à trajetória do curso." onClose={() => setActivePanel(null)}>
           <dl className="profile-dialog__facts">
-            <div><dt>Curso</dt><dd>{courseName(profile?.curso_codigo)} ({profile?.curso_codigo || '—'})</dd></div>
+            <div><dt>Curso</dt><dd>{curriculum?.curso_nome || courseName(profile?.curso_codigo)} ({profile?.curso_codigo || '—'})</dd></div>
             <div><dt>Matrícula</dt><dd>{profile?.matricula || '—'}</dd></div>
-            <div><dt>PPC atual</dt><dd>{selectedCurriculum ? `${selectedCurriculum.ano_versao} — ${selectedCurriculum.nome}` : 'Ainda não selecionado'}</dd></div>
+            <div><dt>PPC atual</dt><dd>{institutional
+              ? (curriculum?.ano_versao || 'Não disponível')
+              : selectedCurriculum ? `${selectedCurriculum.ano_versao} — ${selectedCurriculum.nome}` : 'Ainda não selecionado'}</dd></div>
           </dl>
-          <section className="profile-ppc profile-ppc--dialog" aria-labelledby="profile-ppc-title">
+          {institutional ? <p>O currículo é informado pela UFSM a partir do seu vínculo acadêmico.</p> : <section className="profile-ppc profile-ppc--dialog" aria-labelledby="profile-ppc-title">
             <div><strong id="profile-ppc-title">Alterar currículo</strong></div>
             <div className="semester-tabs profile-ppc__tabs" role="group" aria-label="Selecionar PPC">
               {curricula.map((item) => (
@@ -360,7 +363,7 @@ function PerfilPage() {
             </button>
             {ppcFeedback && <p className="profile-dialog__feedback is-success" role="status">{ppcFeedback}</p>}
             {ppcError && <p className="profile-dialog__feedback is-error" role="alert">{ppcError}</p>}
-          </section>
+          </section>}
         </ProfileDialog>
       )}
 
@@ -382,7 +385,9 @@ function PerfilPage() {
       {activePanel === 'help' && (
         <ProfileDialog title="Ajuda e suporte" subtitle="Atalhos para as principais ações do recomendador." onClose={() => setActivePanel(null)}>
           <section className="profile-dialog__section profile-help"><h3>Minha grade não reconheceu uma disciplina</h3><p>Abra a grade, envie o histórico escolar e selecione manualmente uma equivalência na disciplina pendente.</p></section>
-          <section className="profile-dialog__section profile-help"><h3>O progresso parece incorreto</h3><p>Confira se o PPC selecionado corresponde ao currículo em que você ingressou e se o histórico mais recente foi carregado.</p></section>
+          <section className="profile-dialog__section profile-help"><h3>O progresso parece incorreto</h3><p>{institutional
+            ? 'Confira o PPC e o histórico no Portal do Aluno. Para atualizar os dados no app, saia e entre novamente pela UFSM.'
+            : 'Confira se o PPC selecionado corresponde ao currículo em que você ingressou e se o histórico mais recente foi carregado.'}</p></section>
           <section className="profile-dialog__section profile-help">
             <h3>Guia e conta</h3>
             <p>Reveja a apresentação do Salomão ou gerencie sua conta.</p>

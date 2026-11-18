@@ -43,3 +43,23 @@
 .discipline-plan-picker__options p { margin: 0; padding: 16px 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
 .discipline-plan-picker__options p.is-error { color: var(--pink); }
 .discipline-plan-picker__hint { margin: 0; padding: 16px 0 20px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.discipline-plan-picker__other-courses { border-top: 1px solid var(--border); padding-top: 14px; }
+.discipline-plan-picker__other-courses > p { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.discipline-plan-picker__course { margin-block: 8px; border: 1px solid var(--border); border-radius: 13px; background: var(--surface); }
+.discipline-plan-picker__course[open] { border-color: color-mix(in srgb, var(--cyan) 48%, var(--border)); }
+.discipline-plan-picker__course > summary { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 10px 12px; border-radius: 12px; cursor: pointer; list-style: none; }
+.discipline-plan-picker__course > summary::-webkit-details-marker { display: none; }
+.discipline-plan-picker__course > summary:hover { background: color-mix(in srgb, var(--cyan) 7%, transparent); }
+.discipline-plan-picker__course > summary:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.discipline-plan-picker__course-icon { display: grid; place-items: center; flex: 0 0 34px; height: 34px; border-radius: 9px; color: var(--cyan); background: color-mix(in srgb, var(--cyan) 13%, transparent); }
+.discipline-plan-picker__course-label { display: grid; flex: 1; min-width: 0; gap: 4px; color: var(--text); font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
+.discipline-plan-picker__course-label small { color: var(--muted); font-size: 11px; }
+.discipline-plan-picker__chevron { flex-shrink: 0; color: var(--cyan); }
+.discipline-plan-picker__course[open] .discipline-plan-picker__chevron { transform: rotate(180deg); }
+.discipline-plan-picker__course-body { --plan-dialog-gutter: 12px; padding: 0 12px 8px; border-top: 1px solid var(--border); }
+.discipline-plan-picker__scan-status { display: flex; align-items: center; gap: 8px; }
+.discipline-plan-picker__scan-status svg { color: var(--cyan); animation: picker-loading 1s linear infinite; }
+@keyframes picker-loading { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .discipline-plan-picker__scan-status svg { animation: none; }
+}

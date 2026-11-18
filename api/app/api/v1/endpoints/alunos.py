@@ -1,15 +1,15 @@
 from datetime import time
 from typing import Annotated
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 
 from app.core.errors import ApplicationError
-from app.dependencies.auth import CurrentProfileDep
+from app.dependencies.auth import CurrentProfileDep, require_legacy_profile_features
 from app.dependencies.providers import HistoricoEscolarServiceDep
 from app.schemas.academic import ItemHistoricoEscolarResponse, OfertaTurmaResponse
 from app.schemas.common import ApiResponse, ErrorResponse, response_meta
 
-router = APIRouter(prefix="/alunos", tags=["Alunos"])
+router = APIRouter(prefix="/alunos", tags=["Alunos"], dependencies=[Depends(require_legacy_profile_features)])
 
 
 @router.get(

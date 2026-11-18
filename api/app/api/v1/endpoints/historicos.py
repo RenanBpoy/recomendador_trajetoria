@@ -1,6 +1,6 @@
-from fastapi import APIRouter, File, Request, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, Request, Response, UploadFile, status
 
-from app.dependencies.auth import CurrentProfileDep
+from app.dependencies.auth import CurrentProfileDep, require_legacy_profile_features
 from app.dependencies.historicos import (
     EquivalenciaManualServiceDep,
     ImportacaoHistoricoServiceDep,
@@ -15,7 +15,7 @@ from app.schemas.historicos import (
 )
 from app.services.historicos import MAX_PDF_SIZE
 
-router = APIRouter(prefix="/historicos", tags=["Históricos"])
+router = APIRouter(prefix="/historicos", tags=["Históricos"], dependencies=[Depends(require_legacy_profile_features)])
 
 
 @router.post(

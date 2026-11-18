@@ -79,6 +79,18 @@ export function latestHistoryByDiscipline(history) {
 export function academicStatusFor(entry) {
   if (!entry) return { key: 'pending', label: 'Pendente' }
 
+  if (entry.fonte === 'UFSM') {
+    if (entry.cumprido) return { key: 'approved', label: 'Aprovada' }
+    const official = {
+      REPROVADO_NOTA: { key: 'failed', label: 'Reprovada' },
+      REPROVADO_FREQUENCIA: { key: 'failed', label: 'Reprovada' },
+      TRANCAMENTO: { key: 'interrupted', label: 'Trancada' },
+      CANCELAMENTO: { key: 'interrupted', label: 'Cancelada' },
+      NAO_CONCLUIDA: { key: 'interrupted', label: 'Não concluída' },
+      EM_ANDAMENTO: { key: 'pending', label: 'Em andamento' },
+    }
+    return official[entry.grupo_situacao] || { key: 'pending', label: entry.situacao_final || 'Pendente' }
+  }
   const status = normalizeStatus(entry.situacao_final)
   if (status.includes('APROVADO') || status.includes('DISPENSADO') || status.includes('DISPENSA') || status.includes('APROVEITAMENTO')) {
     return { key: 'approved', label: 'Aprovada' }
@@ -127,7 +139,7 @@ export function buildCurriculumProgress(components, history, manualMappings = []
         disciplina_origem: manualMapping.nome_original,
         metodo_correspondencia: 'SELECAO_MANUAL',
       } : null
-      const attempt = automaticAttempt || manualAttempt
+      const attempt = component.tentativa_oficial || automaticAttempt || manualAttempt
       return {
         ...component,
         tentativa_mais_recente: attempt,

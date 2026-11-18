@@ -1,5 +1,5 @@
 import { AlertTriangle, Search } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { classifyOfferingsByPlan } from '../../utils/disciplineAvailability'
 import { weeklyActivityLabel } from '../../utils/weeklyPlan'
 import './DisciplinePlanPicker.css'
@@ -39,9 +39,12 @@ function DisciplinePlanPicker({
   planItems = [],
   editingItem = null,
   showHeading = true,
+  heading = 'Disciplina',
+  compact = false,
   onSelect,
 }) {
   const [query, setQuery] = useState('')
+  const id = useId()
   const filtered = useMemo(() => {
     const search = normalize(query.trim())
     if (!search) return disciplines
@@ -96,11 +99,11 @@ function DisciplinePlanPicker({
   return (
     <section className="discipline-plan-picker" aria-label="Escolher disciplina">
       {showHeading && <div className="discipline-plan-picker__heading">
-        <span id="discipline-plan-picker-title">Disciplina</span>
+        <span>{heading}</span>
         {!loading && !error && <small>{disciplines.length} {disciplines.length === 1 ? 'opção' : 'opções'}</small>}
       </div>}
 
-      <label className="discipline-plan-picker__search">
+      {!compact && <label className="discipline-plan-picker__search">
         <Search size={17} aria-hidden="true" />
         <input
           type="search"
@@ -109,7 +112,7 @@ function DisciplinePlanPicker({
           aria-label="Buscar disciplina por nome ou código"
           onChange={(event) => setQuery(event.target.value)}
         />
-      </label>
+      </label>}
 
       <div className="discipline-plan-picker__options" role="listbox" aria-label="Disciplinas ainda não aprovadas">
         {loading && <p>Carregando disciplinas...</p>}
@@ -117,9 +120,9 @@ function DisciplinePlanPicker({
         {!loading && !error && !filtered.length && <p>Nenhuma disciplina encontrada.</p>}
         {!loading && !error && filtered.length > 0 && (
           <>
-            <section className="discipline-plan-picker__group" aria-labelledby="available-disciplines-title">
+            <section className="discipline-plan-picker__group" aria-labelledby={`${id}-available`}>
               <div className="discipline-plan-picker__group-heading">
-                <strong id="available-disciplines-title"><i className="discipline-plan-picker__dot" aria-hidden="true" />Disponíveis</strong>
+                <strong id={`${id}-available`}><i className="discipline-plan-picker__dot" aria-hidden="true" />Disponíveis</strong>
                 <span>{groups.available.length}</span>
               </div>
               {groups.available.length
@@ -128,9 +131,9 @@ function DisciplinePlanPicker({
             </section>
 
             {groups.conflicting.length > 0 && (
-              <section className="discipline-plan-picker__group discipline-plan-picker__group--conflict" aria-labelledby="conflicting-disciplines-title">
+              <section className="discipline-plan-picker__group discipline-plan-picker__group--conflict" aria-labelledby={`${id}-conflicts`}>
                 <div className="discipline-plan-picker__group-heading">
-                  <strong id="conflicting-disciplines-title"><AlertTriangle size={11} />Conflito com outra atividade</strong>
+                  <strong id={`${id}-conflicts`}><AlertTriangle size={11} />Conflito com outra atividade</strong>
                   <span>{groups.conflicting.length}</span>
                 </div>
                 {groups.conflicting.map((entry) => renderOption(entry, true))}
@@ -140,9 +143,9 @@ function DisciplinePlanPicker({
         )}
       </div>
 
-      <p className="discipline-plan-picker__hint">
+      {!compact && <p className="discipline-plan-picker__hint">
         A busca parte do intervalo selecionado e confere todos os encontros da turma. Resolva os conflitos indicados antes de adicionar a disciplina.
-      </p>
+      </p>}
     </section>
   )
 }

@@ -1,8 +1,9 @@
 from typing import Literal
 
-from fastapi import APIRouter, File, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Request, UploadFile, status
 
-from app.dependencies.auth import CurrentAccessToken, CurrentProfileDep, PerfilServiceDep
+from app.dependencies.auth import CurrentAccessToken, CurrentProfileDep, PerfilServiceDep, require_legacy_profile_features
+from app.services.ufsm_auth import LOCAL_PREFIX
 from app.schemas.auth import (
     EmailUpdateOut,
     OperationMessageOut,
@@ -19,6 +20,7 @@ router = APIRouter(prefix="/perfil", tags=["Perfil"])
 
 @router.delete(
     "/conta",
+    dependencies=[Depends(require_legacy_profile_features)],
     response_model=ApiResponse[OperationMessageOut],
     responses={
         200: {"content": {"application/json": {"examples": {
@@ -60,10 +62,11 @@ async def get_profile(
     access_token: CurrentAccessToken,
     service: PerfilServiceDep,
 ) -> ApiResponse[UserProfileOut]:
-    profile = await service.with_avatar_url(
-        profile=profile,
-        access_token=access_token,
-    )
+    if not access_token.startswith(LOCAL_PREFIX):
+        profile = await service.with_avatar_url(
+            profile=profile,
+            access_token=access_token,
+        )
     return ApiResponse(
         data=UserProfileOut.model_validate(profile),
         meta=response_meta(request),
@@ -72,6 +75,7 @@ async def get_profile(
 
 @router.put(
     "/ppc",
+    dependencies=[Depends(require_legacy_profile_features)],
     response_model=ApiResponse[UserProfileOut],
     responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
     summary="Salvar o PPC utilizado pelo estudante",
@@ -96,6 +100,7 @@ async def select_curriculum(
 
 @router.patch(
     "/dados-pessoais",
+    dependencies=[Depends(require_legacy_profile_features)],
     response_model=ApiResponse[UserProfileOut],
     responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
     summary="Atualizar nome e data de nascimento",
@@ -124,6 +129,7 @@ async def update_personal_data(
 
 @router.put(
     "/email",
+    dependencies=[Depends(require_legacy_profile_features)],
     response_model=ApiResponse[EmailUpdateOut],
     responses={401: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
     summary="Solicitar a alteração do e-mail da conta",
@@ -149,6 +155,7 @@ async def update_email(
 
 @router.put(
     "/senha",
+    dependencies=[Depends(require_legacy_profile_features)],
     response_model=ApiResponse[OperationMessageOut],
     responses={401: {"model": ErrorResponse}, 422: {"model": ErrorResponse}},
     summary="Alterar a senha da conta",
@@ -171,6 +178,7 @@ async def update_password(
 
 @router.post(
     "/avatar",
+    dependencies=[Depends(require_legacy_profile_features)],
     response_model=ApiResponse[UserProfileOut],
     status_code=status.HTTP_201_CREATED,
     responses={401: {"model": ErrorResponse}, 422: {"model": ErrorResponse}},
@@ -198,6 +206,7 @@ async def upload_avatar(
 
 @router.delete(
     "/avatar",
+    dependencies=[Depends(require_legacy_profile_features)],
     response_model=ApiResponse[UserProfileOut],
     responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
     summary="Remover a foto do perfil",

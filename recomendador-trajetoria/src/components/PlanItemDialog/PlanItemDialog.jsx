@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from 'react'
 import { weeklyActivityLabel } from '../../utils/weeklyPlan'
 import DisciplinePlanPicker from '../DisciplinePlanPicker/DisciplinePlanPicker'
+import OtherCourseOfferings from '../DisciplinePlanPicker/OtherCourseOfferings'
 import {
   useFirstAccessGuideAction,
   useFirstAccessGuideTarget,
@@ -47,6 +48,8 @@ function PlanItemDialog({
   disciplines = [],
   disciplinesLoading = false,
   disciplinesError = '',
+  institutional = false,
+  targetPeriod = null,
   planItems = [],
   onClose,
   onSave,
@@ -55,6 +58,7 @@ function PlanItemDialog({
   const dialogGuideRef = useFirstAccessGuideTarget('first-access-plan-dialog')
   const completeGuideAction = useFirstAccessGuideAction()
   const [form, setForm] = useState(item)
+  const [chosenOffering, setChosenOffering] = useState(null)
   const [submitError, setSubmitError] = useState('')
   const formId = useId()
   const isDiscipline = form.tipo_atividade === 'DISCIPLINA'
@@ -64,9 +68,17 @@ function PlanItemDialog({
     [form.hora_inicio],
   )
 
-  const selectedOffering = disciplines.find(
-    (offering) => offering.id === form.oferta_turma_id,
-  ) || disciplines.find((offering) => offeringMatchesItem(offering, form)) || null
+  const persistedOfferingId = item.grupo_disciplina?.startsWith('oferta:ufsm-')
+    ? item.grupo_disciplina.slice('oferta:'.length)
+    : null
+  const selectedOffering = chosenOffering || disciplines.find(
+    (offering) => offering.id === (form.oferta_turma_id || persistedOfferingId),
+  ) || (!persistedOfferingId && disciplines.find((offering) => offeringMatchesItem(offering, form))) || null
+
+  function selectOffering(offering) {
+    setChosenOffering(offering)
+    setSubmitError('')
+  }
 
   function change(field, value) {
     setSubmitError('')
@@ -99,6 +111,7 @@ function PlanItemDialog({
         observacoes: [
           selectedOffering.disciplina_codigo,
           `Turma ${selectedOffering.codigo_turma}`,
+          institutional ? `Oferta ${selectedOffering.id}` : null,
           schedule.sala,
         ].filter(Boolean).join(' · '),
       }))
@@ -135,20 +148,24 @@ function PlanItemDialog({
     >
       <form id={formId} className="plan-item-form" onSubmit={submit}>
         {form.tipo_atividade === 'DISCIPLINA' && (
-          <DisciplinePlanPicker
+          <><DisciplinePlanPicker
             disciplines={disciplines}
             selectedOfferingId={selectedOffering?.id || ''}
             loading={disciplinesLoading}
             error={disciplinesError}
             planItems={planItems}
             editingItem={item}
-            onSelect={(offering) => setForm((current) => ({
-              ...current,
-              oferta_turma_id: offering.id,
-              disciplina_codigo: offering.disciplina_codigo,
-              titulo: offering.disciplina_nome,
-            }))}
+            heading={institutional ? `Seu curso${targetPeriod ? ` · ${targetPeriod.ano}/${targetPeriod.semestre}` : ''}` : undefined}
+            onSelect={selectOffering}
           />
+          {institutional && (
+            <OtherCourseOfferings
+              slot={item}
+              selectedOfferingId={selectedOffering?.id}
+              planItems={planItems}
+              onSelect={selectOffering}
+            />
+          )}</>
         )}
         {form.tipo_atividade !== 'DISCIPLINA' && (
           <>

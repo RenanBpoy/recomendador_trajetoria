@@ -44,7 +44,7 @@ prefixo `Bearer` automaticamente.
 
 OPENAPI_TAGS = [
     {"name": "Infraestrutura", "description": "Disponibilidade e identificação da API."},
-    {"name": "Autenticação", "description": "Cadastro e login por meio do Supabase Auth."},
+    {"name": "Autenticação", "description": "Login legado pelo Supabase Auth e login institucional experimental pela UFSM."},
     {"name": "Cursos", "description": "Cursos acadêmicos normalizados pelo AcademicDataProvider."},
     {"name": "PPCs", "description": "Versões de PPC e suas sequências curriculares aconselhadas."},
     {"name": "Disciplinas", "description": "Catálogo de disciplinas acadêmicas."},
@@ -315,6 +315,12 @@ RECOMMENDATION = {
 
 
 ENDPOINT_DESCRIPTIONS: dict[str, str] = {
+    "GET /api/v1/autenticacao/ufsm/grade": "Retorna o PPC, os componentes e o histórico oficiais vinculados à sessão UFSM atual.",
+    "GET /api/v1/autenticacao/ufsm/configuracao": "Indica se o login institucional está habilitado e, nesse caso, informa o endereço do portal para gerenciar a sessão UFSM.",
+    "POST /api/v1/autenticacao/ufsm/iniciar": "Retorna o endereço do portal de autenticação da UFSM e um identificador de tentativa.",
+    "POST /api/v1/autenticacao/ufsm/callback": "Troca o código recebido do portal e retorna a conta e os vínculos regulares para confirmação, sem abrir sessão.",
+    "POST /api/v1/autenticacao/ufsm/confirmar": "Confirma a conta e o vínculo escolhido, e cria a sessão local.",
+    "POST /api/v1/autenticacao/ufsm/sair": "Revoga a sessão local de login institucional.",
     "GET /api/v1/status": "Confirma que o processo da API está respondendo. Não testa profundamente a disponibilidade do banco.",
     "POST /api/v1/autenticacao/cadastro": "Cria a identidade no Supabase Auth e o perfil acadêmico associado à matrícula e ao curso.",
     "POST /api/v1/autenticacao/login": "Valida e-mail e senha no Supabase Auth e devolve a sessão e o perfil acadêmico.",
@@ -357,6 +363,33 @@ ENDPOINT_DESCRIPTIONS: dict[str, str] = {
 
 
 RESPONSE_EXAMPLES: dict[str, Any] = {
+    "GET /api/v1/autenticacao/ufsm/plano/cursos": {"data": {"itens": [{"codigo": "307", "nome": "Ciência da Computação"}]}},
+    "GET /api/v1/autenticacao/ufsm/plano/ofertas": {"data": {"ano": 2026, "semestre": 2, "itens": []}},
+    "GET /api/v1/autenticacao/ufsm/grade": {"data": {
+        "curriculo": {"id": 102061, "curso_nome": "Sistemas de Informação", "ano_versao": 2009},
+        "componentes": [], "historico": [],
+    }},
+    "GET /api/v1/autenticacao/ufsm/configuracao": {"data": {
+        "habilitado": True,
+        "url_portal": "https://sistemas-homolog.dti.ufsm.br/autenticacao/login",
+    }},
+    "POST /api/v1/autenticacao/ufsm/iniciar": api_response({
+        "url": "https://sistemas-homolog.dti.ufsm.br/autenticacao/login?clientId=ext-trajetoria-academica",
+        "tentativa": "a" * 43,
+    }),
+    "POST /api/v1/autenticacao/ufsm/callback": api_response({
+        "confirmacao": "b" * 43, "nome": "Estudante exemplo",
+        "vinculos": [{"id": 123, "matricula": "202410123", "curso_codigo": "314", "curso_nome": "Sistemas de Informação"}],
+    }),
+    "POST /api/v1/autenticacao/ufsm/confirmar": api_response({
+        "usuario": {"id": PROFILE["id"], "email": ""},
+        "sessao": {
+            "access_token": "ufsm_" + "a" * 43, "refresh_token": "",
+            "expires_in": 3600, "token_type": "bearer",
+        },
+        "perfil": PROFILE,
+    }),
+    "POST /api/v1/autenticacao/ufsm/sair": {"data": {"encerrada": True}},
     "GET /api/v1/status": api_response({"status": "ok", "service": "API do Recomendador de Trajetória"}),
     "POST /api/v1/autenticacao/cadastro": api_response(
         {
@@ -469,6 +502,9 @@ RESPONSE_EXAMPLES: dict[str, Any] = {
 
 
 REQUEST_EXAMPLES: dict[str, Any] = {
+    "POST /api/v1/questionarios/atual/concluir": {"questionario_id": 1, "respostas": { "1": 8, "2": 6 }},
+    "POST /api/v1/autenticacao/ufsm/callback": {"code": "codigo-de-autorizacao", "tentativa": "a" * 43},
+    "POST /api/v1/autenticacao/ufsm/confirmar": {"confirmacao": "b" * 43, "vinculo_id": 123},
     "POST /api/v1/autenticacao/cadastro": {
         "nome": "Estudante Exemplo",
         "matricula": "202320569",

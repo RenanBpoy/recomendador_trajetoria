@@ -13,6 +13,8 @@ representa o semestre (1 ou 2). Exemplo: 20232... = ingresso em 2023/2.
 A matrícula define apenas o semestre cronológico. Para recomendar, o semestre
 curricular é o primeiro período do PPC com menos de 50% da carga horária
 obrigatória aprovada. Uma pendência isolada, portanto, não impede o avanço.
+O período-alvo padrão é o semestre da data atual no fuso da UFSM: de janeiro a
+junho, semestre 1; de julho a dezembro, semestre 2.
 
 Pesos iniciais do questionário
 ------------------------------
@@ -53,6 +55,7 @@ from typing import Iterable
 from unicodedata import combining, normalize
 from uuid import UUID
 
+from app.core.academic_period import current_academic_period
 from app.core.errors import ApplicationError, ResourceNotFoundError
 from app.domain.entities import (
     ComponenteCurricular,
@@ -192,6 +195,7 @@ class DisciplinaRecomendada:
     alertas: tuple[str, ...]
     horarios: tuple[HorarioRecomendado, ...]
     dedicacao_extraclasse: IndicadorDedicacaoExtraclasse | None = None
+    oferta_id_institucional: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -241,7 +245,7 @@ class RecomendacaoService:
         semestre: int | None = None,
     ) -> ContextoSemestre:
         curriculum = await self._get_curriculum(profile)
-        ano_alvo, semestre_alvo = await self._target_period(ano, semestre)
+        ano_alvo, semestre_alvo = self._target_period(ano, semestre)
         components = self._recommendation_components(
             await self._provider.list_curriculum_components(curriculum.id)
         )
@@ -279,6 +283,7 @@ class RecomendacaoService:
             equivalent_codes,
             semestre_cronologico,
             curriculum.periodos_ideais,
+            profile.disciplinas_cumpridas_oficiais,
         )
         return ContextoSemestre(
             matricula=profile.matricula,
@@ -305,7 +310,7 @@ class RecomendacaoService:
         semestre: int | None = None,
     ) -> RecomendacaoAtual:
         curriculum = await self._get_curriculum(profile)
-        ano_alvo, semestre_alvo = await self._target_period(ano, semestre)
+        ano_alvo, semestre_alvo = self._target_period(ano, semestre)
         components = self._recommendation_components(
             await self._provider.list_curriculum_components(curriculum.id)
         )
@@ -324,12 +329,6 @@ class RecomendacaoService:
         )
         plan = await self._planos.list_by_user(profile.id)
         questionnaire = await self._questionarios.get_active(profile.id)
-        offerings_page = await self._provider.list_class_offerings(
-            limit=5000,
-            ano=context.ano_alvo,
-            semestre=context.semestre_alvo,
-        )
-
         equivalent_codes = self._equivalent_codes_map(equivalences)
         latest_history = self._latest_attempts(history)
         candidates = tuple(
@@ -337,6 +336,7 @@ class RecomendacaoService:
             for component in components
             if component.tipo_componente == "DISCIPLINA_OBRIGATORIA"
             and component.disciplina_codigo
+            and component.disciplina_codigo not in profile.disciplinas_cumpridas_oficiais
             and not self._is_approved(
                 self._latest_equivalent_attempt(
                     component.disciplina_codigo,
@@ -345,12 +345,41 @@ class RecomendacaoService:
                 )
             )
         )
+        recommendation_offerings = getattr(self._provider, "list_recommendation_offerings", None)
+        if recommendation_offerings is None:
+            offerings_page = await self._provider.list_class_offerings(
+                limit=5000, ano=context.ano_alvo, semestre=context.semestre_alvo,
+            )
+        else:
+            offering_codes = {
+                code for component in candidates
+                for code in self._equivalent_codes(component.disciplina_codigo, equivalent_codes)
+            }
+            offerings_page = await recommendation_offerings(
+                codes=offering_codes, ano=context.ano_alvo, semestre=context.semestre_alvo,
+            )
+        exact_offerings_by_code = self._offerings_by_code(
+            offerings_page.items,
+            profile.curso_codigo,
+        )
+        offerings_by_code = {
+            component.disciplina_codigo: self._equivalent_offerings(
+                component.disciplina_codigo,
+                exact_offerings_by_code,
+                equivalent_codes,
+                profile.curso_codigo,
+            )
+            for component in candidates
+            if component.disciplina_codigo
+        }
         performance_history = self._history_by_equivalence(
             latest_history,
             equivalent_codes,
         )
+        # Sem oferta nem equivalente com horário, a disciplina não disputa
+        # vaga. O histórico permanece completo para calcular o desempenho.
         relevant_codes = {
-            *(component.disciplina_codigo for component in candidates if component.disciplina_codigo),
+            *(code for code, offerings in offerings_by_code.items() if offerings),
             *performance_history.keys(),
         }
         statistics_codes = tuple(sorted({
@@ -395,20 +424,6 @@ class RecomendacaoService:
             limite_disciplinas_alto_risco=high_risk_limit,
         )
 
-        exact_offerings_by_code = self._offerings_by_code(
-            offerings_page.items,
-            profile.curso_codigo,
-        )
-        offerings_by_code = {
-            component.disciplina_codigo: self._equivalent_offerings(
-                component.disciplina_codigo,
-                exact_offerings_by_code,
-                equivalent_codes,
-                profile.curso_codigo,
-            )
-            for component in candidates
-            if component.disciplina_codigo
-        }
         ordered_candidates = self._ordered_candidates(
             candidates,
             context.semestre_curricular,
@@ -545,8 +560,8 @@ class RecomendacaoService:
             raise ResourceNotFoundError("PPC do perfil", profile.ppc_id)
         return curriculum
 
-    async def _target_period(
-        self,
+    @staticmethod
+    def _target_period(
         ano: int | None,
         semestre: int | None,
     ) -> tuple[int, int]:
@@ -563,14 +578,7 @@ class RecomendacaoService:
                 )
             return ano, semestre
 
-        periods = await self._provider.list_academic_periods()
-        if not periods:
-            raise ApplicationError(
-                "Não há período acadêmico com ofertas cadastrado.",
-                code="periodo_sem_ofertas",
-            )
-        target = max(periods, key=lambda item: (item.ano, item.semestre))
-        return target.ano, target.semestre
+        return current_academic_period()
 
     @staticmethod
     def _parse_registration(registration: str) -> tuple[int, int, str]:
@@ -607,6 +615,7 @@ class RecomendacaoService:
         equivalent_codes: dict[str, frozenset[str]],
         chronological_semester: int,
         ideal_periods: int,
+        officially_completed: frozenset[str] = frozenset(),
     ) -> int:
         upper_limit = max(1, min(chronological_semester, ideal_periods))
         required_by_semester: dict[int, list[ComponenteCurricular]] = {}
@@ -628,7 +637,7 @@ class RecomendacaoService:
             approved_hours = sum(
                 max(0, item.carga_horaria)
                 for item in semester_components
-                if cls._is_approved(
+                if item.disciplina_codigo in officially_completed or cls._is_approved(
                     cls._latest_equivalent_attempt(
                         item.disciplina_codigo,
                         latest_history,
@@ -678,6 +687,8 @@ class RecomendacaoService:
     def _is_approved(cls, item: ItemHistoricoEscolar | None) -> bool:
         if item is None:
             return False
+        if item.cumprido_oficial is not None:
+            return item.cumprido_oficial
         status = cls._normalized_text(item.situacao_final)
         return any(
             marker in status
@@ -1007,6 +1018,19 @@ class RecomendacaoService:
             if code is None:
                 continue
             name = component.disciplina_nome or component.nome_no_ppc
+            offerings = offerings_by_code.get(code, ())
+            if not offerings:
+                not_selected.append(
+                    DisciplinaNaoSelecionada(
+                        disciplina_codigo=code,
+                        disciplina_nome=name,
+                        semestre_recomendado=component.semestre_recomendado,
+                        motivo_codigo="SEM_OFERTA_COM_HORARIO",
+                        motivo="Não foi encontrada oferta com horários para o período alvo.",
+                    )
+                )
+                continue
+
             statistic = statistics.get(code)
             risk = self._risk_level(statistic)
             advanced = component.semestre_recomendado > reference_semester
@@ -1021,19 +1045,6 @@ class RecomendacaoService:
                             "Disciplinas futuras só podem ser adiantadas quando "
                             "possuem taxa de reprovação conhecida e risco baixo."
                         ),
-                    )
-                )
-                continue
-
-            offerings = offerings_by_code.get(code, ())
-            if not offerings:
-                not_selected.append(
-                    DisciplinaNaoSelecionada(
-                        disciplina_codigo=code,
-                        disciplina_nome=name,
-                        semestre_recomendado=component.semestre_recomendado,
-                        motivo_codigo="SEM_OFERTA_COM_HORARIO",
-                        motivo="Não foi encontrada oferta com horários para o período alvo.",
                     )
                 )
                 continue
@@ -1128,6 +1139,7 @@ class RecomendacaoService:
                 atrasada=delayed,
                 adiantada=advanced,
                 oferta_turma_id=available.id,
+                oferta_id_institucional=available.id_institucional,
                 codigo_turma=available.codigo_turma,
                 carga_horaria=component.carga_horaria,
                 horas_semanais=weekly_hours,

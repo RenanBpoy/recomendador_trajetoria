@@ -17,8 +17,9 @@ async function request(path, {
   body,
   accessToken,
   loadingMessage = 'Salomão está buscando seus dados...',
+  showLoading = true,
 } = {}) {
-  const finishLoading = beginLoading(loadingMessage)
+  const finishLoading = showLoading ? beginLoading(loadingMessage) : () => {}
   const headers = {}
   const isFormData = body instanceof FormData
   if (body !== undefined && !isFormData) headers['Content-Type'] = 'application/json'
@@ -63,8 +64,8 @@ async function request(path, {
   }
 }
 
-export function apiGet(path, accessToken) {
-  return request(path, { accessToken })
+export function apiGet(path, accessToken, options) {
+  return request(path, { ...options, accessToken })
 }
 
 export function apiPost(path, body, accessToken) {

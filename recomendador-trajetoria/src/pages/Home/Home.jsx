@@ -8,7 +8,8 @@ import FirstRecommendationSteps from '../../components/FirstRecommendationSteps/
 import MetricStrip from '../../components/MetricStrip/MetricStrip'
 import QuickActionCard from '../../components/QuickActionCard/QuickActionCard'
 import { useAcademicProgress } from '../../hooks/useAcademicProgress'
-import { getActiveHistoryImport } from '../../services/academic'
+import { getActiveHistoryImport, isInstitutionalSession } from '../../services/academic'
+import { useStoredAuth } from '../../hooks/useStoredAuth'
 import { getWeeklyPlan } from '../../services/plan'
 import { getCurrentQuestionnaire } from '../../services/questionnaire'
 import './Home.css'
@@ -25,6 +26,7 @@ function currentAcademicPeriod() {
 function Home() {
   const navigate = useNavigate()
   const { profile, curriculum, summary, loading, error } = useAcademicProgress()
+  const institutional = isInstitutionalSession(useStoredAuth())
   const [historyLoaded, setHistoryLoaded] = useState(false)
   const [checkingHistory, setCheckingHistory] = useState(() => Boolean(profile?.id))
   const [questionnaireCompleted, setQuestionnaireCompleted] = useState(false)
@@ -34,7 +36,7 @@ function Home() {
 
   useEffect(() => {
     let active = true
-    if (!profile?.id) {
+    if (!profile?.id || institutional) {
       return () => { active = false }
     }
     getActiveHistoryImport()
@@ -48,7 +50,7 @@ function Home() {
         if (active) setCheckingHistory(false)
       })
     return () => { active = false }
-  }, [profile?.id])
+  }, [profile?.id, institutional])
 
   useEffect(() => {
     let active = true
@@ -128,8 +130,9 @@ function Home() {
         </section>
 
         <FirstRecommendationSteps
-          historyLoaded={historyLoaded}
-          checkingHistory={checkingHistory}
+          historyLoaded={institutional ? Boolean(curriculum) : historyLoaded}
+          checkingHistory={institutional ? loading : checkingHistory}
+          institutional={institutional}
           questionnaireCompleted={questionnaireCompleted}
           checkingQuestionnaire={checkingQuestionnaire}
           weeklyPlanCompleted={weeklyPlanCompleted}

@@ -9,7 +9,9 @@ import { useStoredAuth } from '../../hooks/useStoredAuth'
 import {
   getActiveHistoryImport,
   getCurriculum,
+  getOfficialGrade,
   getSchoolHistory,
+  isInstitutionalSession,
   listEquivalenceCandidates,
   listManualEquivalences,
   listCurriculumComponents,
@@ -23,7 +25,9 @@ import './Grade.css'
 
 function Grade() {
   const navigate = useNavigate()
-  const profile = useStoredAuth()?.perfil
+  const auth = useStoredAuth()
+  const profile = auth?.perfil
+  const institutional = isInstitutionalSession(auth)
   const [curriculum, setCurriculum] = useState(null)
   const [components, setComponents] = useState([])
   const [history, setHistory] = useState([])
@@ -50,12 +54,22 @@ function Grade() {
         }
         return
       }
-      if (!profile?.ppc_id) {
+      if (!institutional && !profile?.ppc_id) {
         if (active) setLoading(false)
         return
       }
 
       try {
+        if (institutional) {
+          const official = await getOfficialGrade()
+          if (!active) return
+          setCurriculum(official.curriculo)
+          setComponents(official.componentes)
+          setHistory(official.historico)
+          setManualMappings([])
+          setImportData(null)
+          return
+        }
         const [selectedCurriculum, curriculumComponents, schoolHistory, activeImport, mappings] = await Promise.all([
           getCurriculum(profile.ppc_id),
           listCurriculumComponents(profile.ppc_id),
@@ -78,7 +92,7 @@ function Grade() {
 
     loadAcademicContext()
     return () => { active = false }
-  }, [profile?.curso_codigo, profile?.matricula, profile?.ppc_id])
+  }, [institutional, profile?.id, profile?.curso_codigo, profile?.matricula, profile?.ppc_id])
 
   async function refreshHistory() {
     const [updatedHistory, mappings] = await Promise.all([
@@ -190,13 +204,13 @@ function Grade() {
           <div>
             <span>Curso do estudante</span>
             <strong>
-              {courseName(profile?.curso_codigo)}
+              {curriculum?.curso_nome || courseName(profile?.curso_codigo)}
               {curriculum && ` - PPC ${curriculum.ano_versao}`}
             </strong>
           </div>
         </section>
 
-        {!profile?.ppc_id && (
+        {!institutional && !profile?.ppc_id && (
           <section className="grade-page__missing-ppc">
             <strong>Escolha seu PPC para montar a grade</strong>
             <p>A seleção fica salva no seu perfil e será usada em todos os cálculos de progresso.</p>
@@ -205,16 +219,16 @@ function Grade() {
         )}
 
         {error && <p className="form-feedback is-error" role="alert">{error}</p>}
-        {profile?.ppc_id && (
+        {(institutional || profile?.ppc_id) && (!institutional || !error) && (
           <CurriculumPanel
             components={components}
             history={history}
             manualMappings={manualMappings}
             loading={loading}
-            onSelectEquivalence={openEquivalencePicker}
+            onSelectEquivalence={institutional ? undefined : openEquivalencePicker}
           />
         )}
-        {profile?.ppc_id && (
+        {!institutional && profile?.ppc_id && (
           <HistoryImportCard
             importData={importData}
             busy={importBusy}
@@ -225,7 +239,7 @@ function Grade() {
         )}
       </div>
       <BottomNav active="grade" />
-      <EquivalencePicker
+      {!institutional && <EquivalencePicker
         key={pickerTarget?.chave_grade || 'closed-equivalence-picker'}
         target={pickerTarget}
         currentMapping={currentPickerMapping}
@@ -236,7 +250,7 @@ function Grade() {
         onClose={() => setPickerTarget(null)}
         onSelect={handleSelectEquivalence}
         onRemove={handleRemoveEquivalence}
-      />
+      />}
     </main>
   )
 }

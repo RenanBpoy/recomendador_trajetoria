@@ -3,6 +3,8 @@ import { useStoredAuth } from './useStoredAuth'
 import {
   getSchoolHistory,
   getCurriculum,
+  getOfficialGrade,
+  isInstitutionalSession,
   listCurriculumComponents,
   listManualEquivalences,
 } from '../services/academic'
@@ -33,7 +35,7 @@ function summarizeProgress(progress, curriculum) {
     0,
   )
   const ppcHours = Number(curriculum?.carga_horaria_total || componentsHours)
-  const totalHours = Math.max(0, ppcHours - COMPLEMENTARY_ACTIVITIES_HOURS)
+  const totalHours = Math.max(0, ppcHours - (curriculum?.horas_atividades_nao_acompanhadas ?? COMPLEMENTARY_ACTIVITIES_HOURS))
 
   return {
     approved: approved.length,
@@ -45,7 +47,9 @@ function summarizeProgress(progress, curriculum) {
 }
 
 export function useAcademicProgress() {
-  const profile = useStoredAuth()?.perfil
+  const auth = useStoredAuth()
+  const profile = auth?.perfil
+  const institutional = isInstitutionalSession(auth)
   const [curriculum, setCurriculum] = useState(null)
   const [summary, setSummary] = useState(emptySummary)
   const [loading, setLoading] = useState(true)
@@ -62,7 +66,7 @@ export function useAcademicProgress() {
         }
         return
       }
-      if (!profile?.ppc_id) {
+      if (!institutional && !profile?.ppc_id) {
         if (active) {
           setError('Escolha seu PPC no perfil para calcular o progresso acadêmico.')
           setLoading(false)
@@ -71,6 +75,14 @@ export function useAcademicProgress() {
       }
 
       try {
+        if (institutional) {
+          const official = await getOfficialGrade()
+          if (active) {
+            setCurriculum(official.curriculo)
+            setSummary(summarizeProgress(buildCurriculumProgress(official.componentes, official.historico), official.curriculo))
+          }
+          return
+        }
         const [selectedCurriculum, history, components, manualMappings] = await Promise.all([
           getCurriculum(profile.ppc_id),
           getSchoolHistory(profile.matricula),
@@ -94,7 +106,7 @@ export function useAcademicProgress() {
 
     loadProgress()
     return () => { active = false }
-  }, [profile?.curso_codigo, profile?.matricula, profile?.ppc_id])
+  }, [institutional, profile?.id, profile?.curso_codigo, profile?.matricula, profile?.ppc_id])
 
   return { profile, curriculum, summary, loading, error }
 }

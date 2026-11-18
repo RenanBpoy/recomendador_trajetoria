@@ -9,7 +9,7 @@ function HomeTopbar({ studentName }) {
   return (
     <header className="home-topbar">
       <div className="home-topbar__brand">
-        <strong>TCC</strong>
+        <strong>Salomão</strong>
         <span>Painel acadêmico</span>
       </div>
       <Link className="home-topbar__avatar" to="/perfil" aria-label="Abrir perfil">

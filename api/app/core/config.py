@@ -27,6 +27,14 @@ class Settings(BaseSettings):
 
     supabase_url: str | None = None
     supabase_publishable_key: SecretStr | None = None
+    ufsm_auth_enabled: bool = False
+    ufsm_client_id: str = "ext-trajetoria-academica"
+    ufsm_client_secret: SecretStr | None = None
+    ufsm_portal_login_url: str = "https://sistemas-homolog.dti.ufsm.br/autenticacao/login"
+    ufsm_redirect_uri: str = "http://localhost:5173/auth/callback"
+    ufsm_auth_url: str = "https://api.sistemas-homolog.dti.ufsm.br/autenticacao"
+    ufsm_academic_url: str = "https://api.sistemas-homolog.dti.ufsm.br/provedor-trajetoria-academica"
+    ufsm_recommendation_extra_courses: str = "307,312,314"
 
     @property
     def allowed_origins(self) -> list[str]:

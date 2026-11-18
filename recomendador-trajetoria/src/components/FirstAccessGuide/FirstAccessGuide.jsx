@@ -19,7 +19,7 @@ import coffeeMascot from '../../assets/img/salomao-coffee.png'
 
 import MinimizedGuide from './MinimizedGuide'
 import SalomaoPanel from '../SalomaoPanel/SalomaoPanel'
-import { getActiveHistoryImport } from '../../services/academic'
+import { getActiveHistoryImport, isInstitutionalSession } from '../../services/academic'
 import { getCurrentQuestionnaire } from '../../services/questionnaire'
 import { getWeeklyPlan } from '../../services/plan'
 import { AUTH_CHANGED_EVENT, getStoredAuth } from '../../services/auth'
@@ -51,7 +51,7 @@ const mascotes = {
   cafe: coffeeMascot,
 }
 
-const steps = [
+const legacySteps = [
   {
     route: '/home',
     standalone: true,
@@ -366,8 +366,26 @@ function currentUserId() {
   return auth?.usuario?.id || auth?.perfil?.id || ''
 }
 
+const institutionalSteps = legacySteps
+  .filter((step) => step.actionId !== 'history-uploaded'
+    && !(step.route === '/grade' && step.nextLabel === 'Carregar meu histórico'))
+  .map((step) => ({
+    ...step,
+    ...(step.text?.startsWith?.('Vamos conhecer sua trajetória') && {
+      text: 'Vamos conferir sua grade oficial, conhecer seu perfil acadêmico e organizar sua semana.',
+    }),
+    ...(step.actionId === 'open-history' && {
+      text: 'A UFSM já enviou seu histórico. Toque nesse cartão para ver a situação das disciplinas na sua grade.',
+    }),
+    ...(step.actionId === 'return-home-after-history' && {
+      text: 'Confira os semestres na grade. Quando quiser continuar o guia, toque em “Início”.',
+    }),
+  }))
+
 export function FirstAccessGuideProvider({ children }) {
   const auth = useStoredAuth()
+  const institutional = isInstitutionalSession(auth)
+  const steps = institutional ? institutionalSteps : legacySteps
   const firstName = auth?.perfil?.nome?.trim().split(/\s+/)[0] || 'estudante'
   const navigate = useNavigate()
   const location = useLocation()
@@ -477,7 +495,7 @@ export function FirstAccessGuideProvider({ children }) {
       navigate(nextStep.route)
     }
     return true
-  }, [finishGuide, location.pathname, navigate, stepIndex, minimized])
+  }, [finishGuide, location.pathname, navigate, stepIndex, minimized, steps])
 
   async function resumeGuide() {
     if (checking) return
@@ -486,17 +504,17 @@ export function FirstAccessGuideProvider({ children }) {
     setResumeError('')
     try {
       const [history, questionnaire, plan] = await Promise.all([
-        getActiveHistoryImport({ force: true }),
+        institutional ? Promise.resolve(null) : getActiveHistoryImport({ force: true }),
         getCurrentQuestionnaire({ force: true }),
         getWeeklyPlan({ force: true }),
       ])
       if (currentUserId() !== requestedUser) return
       let next = stepIndex
-      const hasHistory = Boolean(history?.id || history?.total_itens)
+      const hasHistory = institutional || Boolean(history?.id || history?.total_itens)
       const answered = questionnaire?.preenchimento?.status === 'CONCLUIDO'
       const hasPlan = Array.isArray(plan) && plan.length > 0
       const indexOfAction = (action) => steps.findIndex((item) => item.actionId === action)
-      const historyUpload = indexOfAction('history-uploaded')
+      const historyUpload = institutional ? indexOfAction('open-history') : indexOfAction('history-uploaded')
       const historyReturn = indexOfAction('return-home-after-history')
       const questionnaireStart = indexOfAction('open-questionnaire')
       const questionnaireAnswer = indexOfAction('answer-questionnaire')
@@ -507,7 +525,9 @@ export function FirstAccessGuideProvider({ children }) {
       if (next === historyReturn && location.pathname !== '/grade') next = questionnaireStart
       if (hasHistory && answered && next <= questionnaireAnswer) next = planStart
       if (hasHistory && !answered && next > questionnaireAnswer) next = questionnaireStart
-      if (hasHistory && answered && hasPlan && next <= planSave) next = indexOfAction('start-recommendation')
+      if (hasHistory && answered && hasPlan && next <= planSave) {
+        next = indexOfAction('start-recommendation')
+      }
       if (!hasPlan && next > planSave) next = planStart
       // Um diálogo fechado não pode ser retomado sem selecionar um horário novamente.
       if ((next === indexOfAction('add-plan-item') || next === planSave) && !targets[steps[next].targetId]) next = indexOfAction('open-plan-slot')
@@ -525,13 +545,13 @@ export function FirstAccessGuideProvider({ children }) {
     const currentStep = steps[stepIndex]
     if (!open || currentStep?.actionId !== actionId) return false
     return advanceFromStep(currentStep)
-  }, [advanceFromStep, open, stepIndex])
+  }, [advanceFromStep, open, stepIndex, steps])
 
   const advanceGuideStep = useCallback(() => {
     const currentStep = steps[stepIndex]
     if (!open || !currentStep?.manualAdvance) return false
     return advanceFromStep(currentStep)
-  }, [advanceFromStep, open, stepIndex])
+  }, [advanceFromStep, open, stepIndex, steps])
 
   useEffect(() => {
     if (!open || minimized || !target || activeStep?.highlightTarget === false) return undefined

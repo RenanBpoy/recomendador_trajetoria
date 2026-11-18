@@ -69,6 +69,7 @@ class DisciplinaRecomendadaOut(RecomendacaoSchema):
     atrasada: bool
     adiantada: bool
     oferta_turma_id: UUID
+    oferta_id_institucional: str | None = None
     codigo_turma: str
     carga_horaria: int
     horas_semanais: float

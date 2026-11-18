@@ -40,6 +40,10 @@ export function weeklyDisciplineIdentity(item) {
   if (item.oferta_turma_id) {
     return { codigo: code, grupo: `oferta:${item.oferta_turma_id}` }
   }
+  const institutionalOffering = observationParts.find((part) => /^Oferta ufsm-\d+$/.test(part))
+  if (institutionalOffering) {
+    return { codigo: code, grupo: `oferta:${institutionalOffering.slice(7)}` }
+  }
   if (code && classCode) {
     return { codigo: code, grupo: `disciplina:${normalizedKey(code)}:turma:${normalizedKey(classCode)}` }
   }

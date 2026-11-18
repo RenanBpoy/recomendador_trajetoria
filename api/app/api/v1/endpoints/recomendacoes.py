@@ -33,7 +33,7 @@ async def get_recommendation_context(
     "/atual",
     response_model=ApiResponse[RecomendacaoAtualOut],
     responses={400: {"model": ErrorResponse}, 401: {"model": ErrorResponse}},
-    summary="Gerar a recomendação inicial explicável para o próximo semestre",
+    summary="Gerar a recomendação explicável para o semestre atual por padrão",
 )
 async def get_current_recommendation(
     request: Request,

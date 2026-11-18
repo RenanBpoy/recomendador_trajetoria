@@ -1,5 +1,5 @@
 import { RotateCw, Save } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import AppHeader from '../../components/AppHeader/AppHeader'
 import BottomNav from '../../components/BottomNav/BottomNav'
 import CargaPlanejada from '../../components/CargaPlanejada/CargaPlanejada'
@@ -9,7 +9,7 @@ import {
 } from '../../components/FirstAccessGuide/FirstAccessGuideContext'
 import PlanItemDialog from '../../components/PlanItemDialog/PlanItemDialog'
 import ScheduleGrid from '../../components/ScheduleGrid/ScheduleGrid'
-import { listNotApprovedDisciplines } from '../../services/academic'
+import { isInstitutionalSession, listInstitutionalPlanOfferings, listNotApprovedDisciplines } from '../../services/academic'
 import { getStoredAuth } from '../../services/auth'
 import { getWeeklyPlan, saveWeeklyPlan } from '../../services/plan'
 import { getRecommendationContext } from '../../services/recommendation'
@@ -67,7 +67,10 @@ function Semana() {
   const planGridGuideRef = useFirstAccessGuideTarget('first-access-plan-grid')
   const planSaveGuideRef = useFirstAccessGuideTarget('first-access-plan-save')
   const completeGuideAction = useFirstAccessGuideAction()
-  const registration = getStoredAuth()?.perfil?.matricula
+  const auth = getStoredAuth()
+  const registration = auth?.perfil?.matricula
+  const institutional = isInstitutionalSession(auth)
+  const disciplineRequest = useRef(0)
   const [selectedType, setSelectedType] = useState('ESTAGIO')
   const [savedItems, setSavedItems] = useState([])
   const [items, setItems] = useState([])
@@ -101,6 +104,7 @@ function Semana() {
   }, [])
 
   async function loadDisciplineOptions(item) {
+    const request = ++disciplineRequest.current
     setDisciplines([])
     setDisciplinesError('')
     setDisciplinesLoading(true)
@@ -110,25 +114,30 @@ function Semana() {
       return
     }
     try {
-      let period = targetPeriod
-      if (!period) {
-        const context = await getRecommendationContext()
-        period = { ano: context.ano_alvo, semestre: context.semestre_alvo }
-        setTargetPeriod(period)
+      if (institutional) {
+        const result = await listInstitutionalPlanOfferings(item)
+        if (request === disciplineRequest.current) {
+          setDisciplines(result.itens)
+          setTargetPeriod({ ano: result.ano, semestre: result.semestre })
+        }
+        return
       }
+      const context = await getRecommendationContext()
+      const period = { ano: context.ano_alvo, semestre: context.semestre_alvo }
+      if (request === disciplineRequest.current) setTargetPeriod(period)
       const available = await listNotApprovedDisciplines(registration, {
         ...period,
         diaSemana: item.dia_semana,
         horaInicio: item.hora_inicio,
         horaFim: item.hora_fim,
       })
-      setDisciplines(available)
+      if (request === disciplineRequest.current) setDisciplines(available)
     } catch (requestError) {
-      setDisciplinesError(
+      if (request === disciplineRequest.current) setDisciplinesError(
         requestError.message || 'Não foi possível carregar as disciplinas desse horário.',
       )
     } finally {
-      setDisciplinesLoading(false)
+      if (request === disciplineRequest.current) setDisciplinesLoading(false)
     }
   }
 
@@ -150,6 +159,7 @@ function Semana() {
     completeGuideAction('open-plan-slot')
     if (selectedType === 'DISCIPLINA') loadDisciplineOptions(draft)
     else {
+      disciplineRequest.current += 1
       setDisciplines([])
       setDisciplinesError('')
       setDisciplinesLoading(false)
@@ -160,6 +170,7 @@ function Semana() {
     setEditorItem(item)
     if (item.tipo_atividade === 'DISCIPLINA') loadDisciplineOptions(item)
     else {
+      disciplineRequest.current += 1
       setDisciplines([])
       setDisciplinesError('')
       setDisciplinesLoading(false)
@@ -167,8 +178,9 @@ function Semana() {
   }
 
   function applyItems(candidateItems, replaceKey = null) {
+    const replacedGroup = items.find((item) => item._key === replaceKey)?.grupo_disciplina
     const baseItems = replaceKey
-      ? items.filter((current) => current._key !== replaceKey)
+      ? items.filter((current) => current._key !== replaceKey && (!replacedGroup || current.grupo_disciplina !== replacedGroup))
       : items
     const uniqueCandidates = candidateItems.filter((candidate, index, all) => (
       all.findIndex((entry) => samePlanSlot(entry, candidate)) === index
@@ -298,8 +310,10 @@ function Semana() {
           disciplines={disciplines}
           disciplinesLoading={disciplinesLoading}
           disciplinesError={disciplinesError}
+          institutional={institutional}
+          targetPeriod={targetPeriod}
           planItems={items}
-          onClose={() => setEditorItem(null)}
+          onClose={() => { disciplineRequest.current += 1; setEditorItem(null) }}
           onSave={applyItems}
           onDelete={removeItem}
         />
